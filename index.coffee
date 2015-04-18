@@ -1,0 +1,124 @@
+#!/usr/bin/env coffee
+
+#
+# Read data from config and make requests to redmine server
+# 
+# 10.03.2015
+# Kirill Temnov
+# 
+
+
+usage = """
+Usage: ry COMMAND [--debug] [--pid PROJECT_ID]
+
+COMMANDS:
+  projects      - list porjects
+  log           - list of issues
+  issue         - create an issue
+  issues        - batch create several issues
+  ms            - list of milestones
+  conf          - configuration
+  project-stat  - statistics on project tasks
+  stat          - statistics on project users
+  user          - user stat in project
+  help          - help on command
+
+"""
+argv = require("optimist").usage(usage).argv
+
+DEBUG_MODE = argv.debug
+
+if 0 is argv._.length
+  if argv.v
+    pkg = require "./package.json"
+    console.log pkg.name
+    console.log "version: #{pkg.version}"
+
+  else
+    return console.log usage
+
+
+{setup, config} = require "./config"
+
+return unless setup()
+
+#console.log "ARGV = #{JSON.stringify argv, null, 2}"
+
+{copyArgv, DUMP_JSON_BODY, DUMP_JSON, RedmineAPI} = require "./redmine-api"
+
+api = new RedmineAPI config
+
+ARGV = copyArgv argv
+
+if "conf" in argv._
+  if 1 is argv._.length
+    for k, v of config.get()
+      console.log "#{k}\t:\t#{v}"
+  if 2 is argv._.length
+    console.log config.get(argv._[1]) or "{not found}"
+  if 3 is argv._.length
+    config.set argv._[1], argv._[2]
+    config.save (err) ->
+      if err
+        console.error "error saving config"
+      else
+        console.log "#{argv._[1]}\t:\t#{argv._[2]}\nsaved."
+  return
+
+if "projects" in argv._
+  if DEBUG_MODE
+    api.getProjects DUMP_JSON_BODY
+  else
+    api.getProjects()
+if "log" in argv._
+  ARGV.status_id = "*"          # TODO watch this!
+  if DEBUG_MODE
+    api.getIssues ARGV, DUMP_JSON
+  else
+    api.getIssues ARGV
+
+
+if ("ms" in argv._) or ("versions" in argv._)
+  if DEBUG_MODE
+    api.getVersions pid: argv.pid, DUMP_JSON_BODY
+  else
+    api.getVersions pid: argv.pid
+
+if ("time" in argv._)
+  o = {}
+  if argv.pid?
+    o.project_id = argv.pid
+  else
+    o.issue_id = argv.issue
+  if DEBUG_MODE
+    api.getTimeEntries o, DUMP_JSON_BODY
+  else
+    api.getTimeEntries o
+
+if "users" in argv._
+  #console.log "call users"
+  api.getProjectUsers ARGV
+
+
+if "project-stat" in argv._
+  api.getProjectStat ARGV
+
+if "stat" in argv._
+  unless ARGV.sort in ["name", "created", "work", "closed", "done"]
+    ARGV.sort = "created"
+  api.getUsersStat ARGV
+
+if "user" in argv._
+  api.getUserStat ARGV
+
+if ("issue" in argv._) or ("i" in argv._)
+  api.createIssue ARGV, argv._[1..].join " "
+
+if "statuses" in argv._
+  api.getIssueStatuses()
+
+
+if "trackers" in argv._
+  api.getTrackers ARGV
+
+
