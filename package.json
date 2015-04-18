@@ -1,0 +1,25 @@
+{
+  "name"		: "redmine-eye",
+  "version"		: "0.7.0",
+  "description"		: "Watching Redmine activity, execute similar tasks, eval statistics",
+  "main"		: "index.coffee",
+  "dependencies"	: {
+      "request"		: "*",
+      "optimist"	: "*",
+      "nconf"		: "*",
+      "readline-sync"   : "*",
+      "colors"          : "*"
+  },
+  "scripts"		: {
+    "test"		: "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords"		: [
+    "redmine",
+    "console",
+    "api",
+    "cvs"
+  ],
+  "bin"                 : {"ry" : "./index.coffee"},
+  "author"		: "KirillTemnov",
+  "license"		: "MIT"
+}
