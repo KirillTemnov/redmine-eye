@@ -13,12 +13,13 @@ npm install -g redmine-eye
 On first start from command line `redmine-eye` will ask requred configuration params.
 They may be changed later with `ry conf NAME VALUE` command.
 
-| param | description | required |
-|:---------:|:---------|:--------------|
-| `host`    | Redmine server  | yes      |
-| `port`    | Redmine server port | yes |
-| `api_key` | user API key | yes |
-| `check_sert` | check https sertificate | no |
+|   param      | description | required |  
+|:------------:|:---------|:--------------|
+| `host`       | Redmine server url | yes      |
+| `port`       | Redmine server port | yes |
+| `api_key`    | user API key | yes |
+| `check_cert` | check https sertificate | no |
+
 
 
 To show all config params execute
@@ -27,11 +28,13 @@ To show all config params execute
 ry conf
 ```
 
-If you use self-signed sertificate on Redmine server set `check_cert`  to `"no"`, :
+If you use self-signed sertificate on Redmine server set `check_cert`  to `"no"` :
 
 ```bash
 ry conf check_cert no
 ```
+
+After *this* you can use `redmine-eye` normally.
 
 # [Command Line Interface](CLI.md)
 
