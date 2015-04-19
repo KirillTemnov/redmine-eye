@@ -33,22 +33,12 @@ if 0 is argv._.length
     pkg = require "./package.json"
     console.log pkg.name
     console.log "version: #{pkg.version}"
-
+    return 
   else
     return console.log usage
 
 
 {setup, config} = require "./config"
-
-return unless setup()
-
-#console.log "ARGV = #{JSON.stringify argv, null, 2}"
-
-{copyArgv, DUMP_JSON_BODY, DUMP_JSON, RedmineAPI} = require "./redmine-api"
-
-api = new RedmineAPI config
-
-ARGV = copyArgv argv
 
 if "conf" in argv._
   if 1 is argv._.length
@@ -64,6 +54,17 @@ if "conf" in argv._
       else
         console.log "#{argv._[1]}\t:\t#{argv._[2]}\nsaved."
   return
+
+
+return unless setup()
+
+#console.log "ARGV = #{JSON.stringify argv, null, 2}"
+
+{copyArgv, DUMP_JSON_BODY, DUMP_JSON, RedmineAPI} = require "./redmine-api"
+
+api = new RedmineAPI config
+
+ARGV = copyArgv argv
 
 if "projects" in argv._
   if DEBUG_MODE
