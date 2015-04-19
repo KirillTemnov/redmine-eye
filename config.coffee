@@ -26,6 +26,8 @@ nconf.load()
 #
 #
 module.exports.setup = setup = ->
+
+
   host = nconf.get "host"
   port = nconf.get "port"
   api_key = nconf.get "api_key"
@@ -54,6 +56,7 @@ module.exports.setup = setup = ->
               console.error "error on saving configuration: #{JSON.stringify err, null, 2}"
             else
               console.log "configuration saved"
+
     catch
       console.log "error testing api. check host, port, api_key and retry"
     return no

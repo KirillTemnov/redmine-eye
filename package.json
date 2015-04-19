@@ -1,25 +1,36 @@
 {
-  "name"		: "redmine-eye",
-  "version"		: "0.7.0",
-  "description"		: "Watching Redmine activity, execute similar tasks, eval statistics",
-  "main"		: "index.coffee",
-  "dependencies"	: {
-      "request"		: "*",
-      "optimist"	: "*",
-      "nconf"		: "*",
-      "readline-sync"   : "*",
-      "colors"          : "*"
+  "name": "redmine-eye",
+  "version": "0.7.1",
+  "description": "Watching Redmine activity, execute similar tasks, eval statistics",
+  "main": "index.coffee",
+  "dependencies": {
+    "request": "*",
+    "optimist": "*",
+    "nconf": "*",
+    "readline-sync": "*",
+    "colors": "*"
   },
-  "scripts"		: {
-    "test"		: "echo \"Error: no test specified\" && exit 1"
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords"		: [
+  "keywords": [
     "redmine",
     "console",
     "api",
     "cvs"
   ],
-  "bin"                 : {"ry" : "./index.coffee"},
-  "author"		: "KirillTemnov",
-  "license"		: "MIT"
+  "bin": {
+    "ry": "./index.coffee"
+  },
+  "author": "KirillTemnov",
+  "license": "MIT",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KirillTemnov/redmine-eye.git"
+  },
+  "bugs": {
+    "url": "https://github.com/KirillTemnov/redmine-eye/issues"
+  },
+  "homepage": "https://github.com/KirillTemnov/redmine-eye"
 }
