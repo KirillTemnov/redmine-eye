@@ -2,10 +2,10 @@
 
 #
 # Read data from config and make requests to redmine server
-# 
+#
 # 10.03.2015
 # Kirill Temnov
-# 
+#
 
 
 usage = """
@@ -33,7 +33,7 @@ if 0 is argv._.length
     pkg = require "./package.json"
     console.log pkg.name
     console.log "version: #{pkg.version}"
-    return 
+    return
   else
     return console.log usage
 
@@ -121,5 +121,3 @@ if "statuses" in argv._
 
 if "trackers" in argv._
   api.getTrackers ARGV
-
-

@@ -3,6 +3,8 @@
 #
 #
 
+# coffeelint: disable=max_line_length
+
 fs = require "fs"
 colors = require "colors"
 request = require "request"
@@ -11,7 +13,7 @@ loc = locale.en
 
 #
 # Internal: duplicate symbol
-# 
+#
 # :sym - symbol to duplicate
 # :times - times to duplicate
 # :return duplicated string
@@ -40,7 +42,7 @@ padRight = (str, length, symbol=" ") ->
   str + dup symbol, restLen
 
 #
-# Public: Copy arguments from command line 
+# Public: Copy arguments from command line
 #
 # :argv - optimist arguments
 # :exclude - array of excluded keys
@@ -67,12 +69,12 @@ module.exports.copyArgv = (argv, exclude=["_", "$0"], transforms={pid:"project_i
 #
 colorize_ratio = (text, ratio) ->
   return switch
-      when 0 >= ratio then text.grey
-      when 0 < ratio < 0.2    then text.red
-      when 0.2 <= ratio < 0.5 then text.yellow
-      when 0.5 <= ratio < 0.8 then text.cyan
-      when 0.8 <= ratio       then text.green.bold
-      else text
+    when 0 >= ratio then text.grey
+    when 0 < ratio < 0.2    then text.red
+    when 0.2 <= ratio < 0.5 then text.yellow
+    when 0.5 <= ratio < 0.8 then text.cyan
+    when 0.8 <= ratio       then text.green.bold
+    else text
 
 #
 # Public: Print project statuses statistics to console
@@ -131,7 +133,7 @@ module.exports.PRINT_USERS_STAT = PRINT_USERS_STAT = (err, fetched_objects, opts
           a.done_tasks.length < b.done_tasks.length and 1 or -1
         else
           a.done_assigned < b.done_assigned and 1 or -1
-    
+
 
   chars_max = opts.chars_max || 80
   console.log "\n\n"
@@ -160,7 +162,7 @@ module.exports.PRINT_USERS_STAT = PRINT_USERS_STAT = (err, fetched_objects, opts
         in_process = in_process.yellow
       else
         in_process = in_process.red
-        
+
 
     closed_must_be = padRight "#{v.closed_tasks.length}/#{v.must_be_closed.length}", 10
     ratio = v.closed_to_must_be
@@ -190,7 +192,7 @@ module.exports.PRINT_USERS_STAT = PRINT_USERS_STAT = (err, fetched_objects, opts
 
   console.log dup "=", 102
   console.log "\n"
-  
+
 
 #
 # Public: POST request wrapper
@@ -207,11 +209,11 @@ module.exports.POST = POST = (url, config, data, fn) ->
   #     url += "?"
   #   else if "&" isnt url[-1..]
   #     url += "&"
-    
+
   #   url += r.join "&"
 
   console.log "posting: " + JSON.stringify {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, null, 2
-  #return 
+  #return
 
   request.post {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, (err, resp, body) ->
     if err
@@ -220,7 +222,7 @@ module.exports.POST = POST = (url, config, data, fn) ->
       return fn null, resp, body
 
     fn err or status: resp.statusCode, resp, body
-  
+
 
 
 #
@@ -243,7 +245,7 @@ module.exports.GET = GET = (url, config, opts, fn) ->
       url += "?"
     else if "&" isnt url[-1..]
       url += "&"
-    
+
     url += r.join "&"
 
   request {url: url, headers: "X-Redmine-API-Key": config.get "api_key"}, (err, resp, body) ->
@@ -278,7 +280,7 @@ module.exports.DUMP_PROJECTS = DUMP_PROJECTS = (err, resp, body) ->
   if err
     console.error "#{resp.request.method}\t#{resp.request.uri.href}"
     console.error err
-  else  
+  else
     prj =  JSON.parse body
     for p in prj.projects
       console.log "#{p.id}\t\t#{p.name}"
@@ -346,7 +348,7 @@ class RedmineAPI
   getProjects: (fn=DUMP_PROJECTS) ->
     GET "projects.json", @config, fn
 
-  
+
   #
   # Public: get issues for project
   #
@@ -354,7 +356,7 @@ class RedmineAPI
   getIssues: (opts={}, fn=DUMP_ISSUES) ->
     processIssues = (err, current_issues) =>
       if err
-        return fn err 
+        return fn err
 
       @iter++
       @fetched_objects.issues ||= {}
@@ -379,7 +381,7 @@ class RedmineAPI
         opts.offset ||= 0
         opts.offset += opts.limit
         @getIssues opts, processIssues
-  
+
 
     #pid = opts.pid || config.pid
     if opts.all
@@ -395,16 +397,16 @@ class RedmineAPI
 
       @end_of_call = false #if 0 is o.offset
       @getIssues fake_opts, processIssues
-        
+
     else
-        GET "issues.json", @config, opts, (err, resp, body) ->
-          if err
-            console.error "#{resp.request.method}\t#{resp.request.uri.href}"
-            console.error err
-            fn err
-          else
-            fn null, JSON.parse(body).issues
-    
+      GET "issues.json", @config, opts, (err, resp, body) ->
+        if err
+          console.error "#{resp.request.method}\t#{resp.request.uri.href}"
+          console.error err
+          fn err
+        else
+          fn null, JSON.parse(body).issues
+
   #
   # Public: Create new issue
   #
@@ -414,7 +416,7 @@ class RedmineAPI
   # :t             - tracker
   # optional:
   # :p             - priority
-  # :parent_issue_id 
+  # :parent_issue_id
   #
   createIssue: (opts={}, subject, fn=->) ->
     if ! (opts.project_id and opts.to and opts.t)
@@ -456,8 +458,8 @@ class RedmineAPI
             console.error "#{@loc.error}: #{JSON.stringify err, null, 2}"
             return
           console.log JSON.stringify resp, null, 2
-  
-        
+
+
 
   #
   # Public: Get project users by collecting all issues and fetch users
@@ -543,7 +545,7 @@ class RedmineAPI
   # Public: Return true if issue is done/
   #
   # TODO read id status from config.
-  # 
+  #
   issueDone: (issue) ->
     (100 is issue.done_ratio) or issue.status.id in [3, 5, 6]
 
@@ -618,11 +620,11 @@ class RedmineAPI
             @fetched_objects.users[i.author.id].name = i.author.name
             @fetched_objects.users[i.author.id].created_tasks ||= []
             unless i.id in @fetched_objects.users[i.author.id].created_tasks
-              @fetched_objects.users[i.author.id].created_tasks.push i.id 
+              @fetched_objects.users[i.author.id].created_tasks.push i.id
 
             @fetched_objects.users[i.author.id].closed_tasks ||= []
             @fetched_objects.users[i.author.id].must_be_closed ||= []
-  
+
             if @issueClosed(i) and not (i.id in @fetched_objects.users[i.author.id].closed_tasks)
               @fetched_objects.users[i.author.id].closed_tasks.push i.id
             if @issueDone(i) and not (i.id in @fetched_objects.users[i.author.id].must_be_closed)
@@ -658,7 +660,7 @@ class RedmineAPI
 
           v.done_assigned = v.done_tasks.length / v.assigned_tasks.length
           v.done_assigned = 0 if isNaN v.done_assigned
-        
+
         fn null, @fetched_objects, opts, @loc
 
 
