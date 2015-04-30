@@ -13,7 +13,7 @@ npm install -g redmine-eye
 On first start from command line `redmine-eye` will ask requred configuration params.
 They may be changed later with `ry conf NAME VALUE` command.
 
-|   param      | description | required |  
+|   param      | description | required |
 |:------------:|:---------|:--------------|
 | `host`       | Redmine server url | yes      |
 | `port`       | Redmine server port | yes |
@@ -40,7 +40,19 @@ After *this* you can use `redmine-eye` normally.
 
 Use command line interface for access all library tools from console.
 
-# Library usage examples 
+## List projects
+
+```
+ry projects
+```
+
+By default redmine returns 25 projects (not documented). For access other projects use `--limit`/`--offset` options.
+
+```
+ry projects --limit 42
+```
+
+# Library usage examples
 
 Before start use library you should initialize it with code:
 
@@ -67,6 +79,13 @@ api.getCurrentUser (err, resp) ->
 ### `getProjects`
 
 Get user projects data
+
+```coffee
+apo.getProjects opts, (err, projects) ->
+```
+
+Add `limit` / `offset` options to access projects deeper than first 25.
+
 
 ### `getIssues`
 
@@ -135,9 +154,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-
-
-
-
-

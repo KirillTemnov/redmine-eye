@@ -3,7 +3,7 @@
 #
 #
 
-# coffeelint: disable=max_line_length
+# coffeelint: disable=max_line_length, enable=colon_assignment_spacing
 
 fs = require "fs"
 colors = require "colors"
@@ -345,8 +345,8 @@ class RedmineAPI
   #
   # Public: Get projects, accesible to users
   #
-  getProjects: (fn=DUMP_PROJECTS) ->
-    GET "projects.json", @config, fn
+  getProjects: (opts={}, fn=DUMP_PROJECTS) ->
+    GET "projects.json", @config, opts, fn
 
 
   #

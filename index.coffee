@@ -12,7 +12,7 @@ usage = """
 Usage: ry COMMAND [--debug] [--pid PROJECT_ID]
 
 COMMANDS:
-  projects      - list porjects
+  projects      - list porjects(--limit, --offset)
   log           - list of issues
   issue         - create an issue
   issues        - batch create several issues
@@ -68,9 +68,9 @@ ARGV = copyArgv argv
 
 if "projects" in argv._
   if DEBUG_MODE
-    api.getProjects DUMP_JSON_BODY
+    api.getProjects ARGV, DUMP_JSON_BODY
   else
-    api.getProjects()
+    api.getProjects ARGV
 if "log" in argv._
   ARGV.status_id = "*"          # TODO watch this!
   if DEBUG_MODE
