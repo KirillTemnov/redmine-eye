@@ -17,6 +17,12 @@ messages.ru =
   error_fetching_user     : "ошибка при получении пользователей"
   error_fetching_trackers : "ошибка при получении трекеров"
   error                   : "ошибка"
+  time                    : "время"
+  issue                   : "задача"
+  date                    : "дата"
+  comment                 : "комментарий"
+  project                 : "проект"
+
 
 
 messages.en =
@@ -31,6 +37,11 @@ messages.en =
   error_fetching_user     : "error fetching user"
   error_fetching_trackers : "error fetching trackers"
   error                   : "error"
+  time                    : "time"
+  issue                   : "issue"
+  date                    : "date"
+  comment                 : "comment"
+  project                 : "project"
 
 
 exports.m = messages

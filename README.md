@@ -52,6 +52,27 @@ By default redmine returns 25 projects (not documented). For access other projec
 ry projects --limit 42
 ```
 
+
+## List time
+
+
+Show user and time
+
+```
+ry time [options]
+```
+
+### Options
+
+| Option          | Description                                 |
+|:---------------:|:--------------------------------------------|
+| `limit`         | limit of records                            |
+| `offset`        | offset, **may be buggy with period**        |
+| `period`        | set to `week` for week report               |
+| `spent_on`      | results on date (date format: "YYYY-MM-DD"  |
+| `user_id`       | fetch results only by user                  |
+
+
 # Library usage examples
 
 Before start use library you should initialize it with code:
