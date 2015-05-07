@@ -5,11 +5,14 @@
 
 # coffeelint: disable=max_line_length, enable=colon_assignment_spacing
 
-fs = require "fs"
-colors = require "colors"
-request = require "request"
-locale = require("./locale").m
-loc = locale.en
+fs       = require "fs"
+colors   = require "colors"
+request  = require "request"
+locale   = require("./locale").m
+if /ru_RU/.test process.env.LANG
+  loc    = locale.ru
+else
+  loc    = locale.en
 
 #
 # Internal: duplicate symbol
@@ -352,7 +355,7 @@ module.exports.DUMP_TIME_ENTRIES = DUMP_TIME_ENTRIES = (err, time_entries) ->
       console.log "| #{padRight t.hours.toFixed(2), 8} | #{padRight usr, 30} | #{t.spent_on} | #{padRight t.issue.id.toString(), 8} | #{padRight t.project.name, 40} |"
       total += t.hours
     console.log dup "-", 112
-    console.log "total: #{total.toFixed 2} hours"
+    console.log "#{loc.total_hours}#{total.toFixed 2}"
 
 
 
@@ -367,11 +370,6 @@ class RedmineAPI
   constructor: (@config) ->
     if "no" is @config.get "check_cert"
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-    lang = @config.get "lang", ""
-    unless locale[lang]
-      lang = "en"
-    @loc = locale[lang]
 
     @fetched_objects = {}       # fetched objects dict [for multiple call]
     @end_of_call = false        # end of transaction call
@@ -456,7 +454,7 @@ class RedmineAPI
   #
   createIssue: (opts={}, subject, fn=->) ->
     if ! (opts.project_id and opts.to and opts.t)
-      return console.error @loc.required_params_missing.red
+      return console.error loc.required_params_missing.red
     queryOpts =
       project_id  : opts.project_id
       status_id   : 1 # hardcode status id
@@ -465,7 +463,7 @@ class RedmineAPI
     @getProjectUsers project_id: opts.project_id, (err) =>
 
       if err
-        return console.error "#{@loc.error_fetching_user}: #{JSON.stringify user, null, 2}".red
+        return console.error "#{loc.error_fetching_user}: #{JSON.stringify user, null, 2}".red
       for k,v of @fetched_objects.users
         if 0 <= v.toLowerCase().indexOf opts.to.toLowerCase()
           queryOpts.assigned_to_id = parseInt k
@@ -474,7 +472,7 @@ class RedmineAPI
         return console.error "Error. User #{opts.to.red} not found"
       @getTrackers {}, (err, result) =>
         if err
-          return console.error @loc.error_fetching_trackers.red
+          return console.error loc.error_fetching_trackers.red
 
         tr = JSON.parse result.body
         for track in tr.trackers
@@ -490,7 +488,7 @@ class RedmineAPI
         queryOpts.subject = subject # todo: make this code nicer!
         POST "issues.json", @config, issue: queryOpts, (err, resp, body) ->
           if err
-            console.error "#{@loc.error}: #{JSON.stringify err, null, 2}"
+            console.error "#{loc.error}: #{JSON.stringify err, null, 2}"
             return
           console.log JSON.stringify resp, null, 2
 
@@ -503,7 +501,7 @@ class RedmineAPI
     opts.status_id = "*"        # I mean ALL
     @getIssues opts, (err, issues) =>
       if err
-        console.error @loc.error_fetching_issues.red
+        console.error loc.error_fetching_issues.red
       else
         @fetched_objects.users = {}
         for i in issues
@@ -573,7 +571,6 @@ class RedmineAPI
           time_entries = JSON.parse(body).time_entries
           time_entries = time_entries.filter (te) -> te.spent_on in days
           dumpTimeEntries null, time_entries
-
     else
       GET "time_entries.json", @config, opts, (err, resp, body) ->
         dumpTimeEntries err, body
@@ -725,7 +722,7 @@ class RedmineAPI
           v.done_assigned = v.done_tasks.length / v.assigned_tasks.length
           v.done_assigned = 0 if isNaN v.done_assigned
 
-        fn null, @fetched_objects, opts, @loc
+        fn null, @fetched_objects, opts, loc
 
 
 module.exports.RedmineAPI = RedmineAPI
