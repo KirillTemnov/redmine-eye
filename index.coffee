@@ -2,18 +2,19 @@
 
 #
 # Read data from config and make requests to redmine server
-# 
+#
 # 10.03.2015
 # Kirill Temnov
-# 
+#
 
 
 usage = """
 Usage: ry COMMAND [--debug] [--pid PROJECT_ID]
 
 COMMANDS:
-  projects      - list porjects
+  projects      - list porjects(--limit, --offset)
   log           - list of issues
+  time          - work time
   issue         - create an issue
   issues        - batch create several issues
   ms            - list of milestones
@@ -22,6 +23,7 @@ COMMANDS:
   stat          - statistics on project users
   user          - user stat in project
   help          - help on command
+
 
 """
 argv = require("optimist").usage(usage).argv
@@ -33,7 +35,7 @@ if 0 is argv._.length
     pkg = require "./package.json"
     console.log pkg.name
     console.log "version: #{pkg.version}"
-    return 
+    return
   else
     return console.log usage
 
@@ -68,9 +70,9 @@ ARGV = copyArgv argv
 
 if "projects" in argv._
   if DEBUG_MODE
-    api.getProjects DUMP_JSON_BODY
+    api.getProjects ARGV, DUMP_JSON_BODY
   else
-    api.getProjects()
+    api.getProjects ARGV
 if "log" in argv._
   ARGV.status_id = "*"          # TODO watch this!
   if DEBUG_MODE
@@ -86,19 +88,15 @@ if ("ms" in argv._) or ("versions" in argv._)
     api.getVersions pid: argv.pid
 
 if ("time" in argv._)
-  o = {}
-  if argv.pid?
-    o.project_id = argv.pid
-  else
-    o.issue_id = argv.issue
   if DEBUG_MODE
-    api.getTimeEntries o, DUMP_JSON_BODY
+    api.getTimeEntries ARGV, DUMP_JSON
   else
-    api.getTimeEntries o
+    api.getTimeEntries ARGV
 
 if "users" in argv._
   #console.log "call users"
-  api.getProjectUsers ARGV
+  api.getUsers ARGV
+  #api.getProjectUsers ARGV
 
 
 if "project-stat" in argv._
@@ -121,5 +119,3 @@ if "statuses" in argv._
 
 if "trackers" in argv._
   api.getTrackers ARGV
-
-
