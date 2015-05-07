@@ -14,6 +14,7 @@ Usage: ry COMMAND [--debug] [--pid PROJECT_ID]
 COMMANDS:
   projects      - list porjects(--limit, --offset)
   log           - list of issues
+  time          - work time
   issue         - create an issue
   issues        - batch create several issues
   ms            - list of milestones
@@ -22,6 +23,7 @@ COMMANDS:
   stat          - statistics on project users
   user          - user stat in project
   help          - help on command
+
 
 """
 argv = require("optimist").usage(usage).argv
@@ -86,19 +88,15 @@ if ("ms" in argv._) or ("versions" in argv._)
     api.getVersions pid: argv.pid
 
 if ("time" in argv._)
-  o = {}
-  if argv.pid?
-    o.project_id = argv.pid
-  else
-    o.issue_id = argv.issue
   if DEBUG_MODE
-    api.getTimeEntries o, DUMP_JSON_BODY
+    api.getTimeEntries ARGV, DUMP_JSON
   else
-    api.getTimeEntries o
+    api.getTimeEntries ARGV
 
 if "users" in argv._
   #console.log "call users"
-  api.getProjectUsers ARGV
+  api.getUsers ARGV
+  #api.getProjectUsers ARGV
 
 
 if "project-stat" in argv._

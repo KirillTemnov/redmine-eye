@@ -24,6 +24,17 @@ dup = (sym="#", times=10) ->
   else
     ""
 
+#
+# Public: Extends (oh my god!) Date object
+#
+#
+Date::pretty_string = ->
+  zero_pad = (x) -> if x < 10 then '0'+x else ''+x
+  d = zero_pad(@getDate())
+  m = zero_pad(@getMonth() + 1)
+  y = @getFullYear()
+  "#{y}-#{m}-#{d}"
+
 
 #
 # Internal: normalize value and max value to chars
@@ -39,7 +50,11 @@ normalize = (val, maxVal, maxChars) ->
 #
 padRight = (str, length, symbol=" ") ->
   restLen = length - str.length
-  str + dup symbol, restLen
+  if restLen < 0
+    str[0...length-2] + ".."
+  else
+    str + dup symbol, restLen
+
 
 #
 # Public: Copy arguments from command line
@@ -88,7 +103,6 @@ module.exports.PRINT_PROJECT_STATS = PRINT_PROJECT_STATS = (err, fetched_objects
   if err
     return console.error loc.error_fetching_issues.red
 
-
   for k1,tracker of fetched_objects.statuses.trackers
     console.log "\n\n#{k1.toUpperCase()}\n#{dup('=', 105)}"
     maxVal = -1
@@ -98,7 +112,6 @@ module.exports.PRINT_PROJECT_STATS = PRINT_PROJECT_STATS = (err, fetched_objects
     for k,v of tracker
       console.log "| #{padRight k, 14} | #{padRight v.toString(), 3} | #{dup('#', normalize(v, maxVal, chars_max))}"
   console.log "\n\n"
-
 
 
 #
@@ -271,6 +284,23 @@ module.exports.DUMP_JSON_BODY = DUMP_JSON_BODY = (err, resp, body) ->
     console.error err
 
 
+#
+# Public: Dump users
+#
+#
+module.exports.DUMP_USERS = DUMP_USERS = (err, resp, body) ->
+  console.log ""
+
+  if err is null
+    body = JSON.parse body
+    for u in body.users
+      console.log "| #{padRight u.id.toString(), 4} | #{padRight u.firstname + ' ' + u.lastname, 30} |"
+  else
+    console.error "#{resp.request.method}\t#{resp.request.uri.href}"
+    console.error err
+  console.log ""
+
+
 
 #
 # Public: Dump projects from request
@@ -305,20 +335,25 @@ module.exports.DUMP_ISSUES = DUMP_ISSUES = (err, issues) ->
 
 
 #
-# Public: Dump time entries from request
+# Public: Dump time entries
 #
-module.exports.DUMP_TIME_ENTRIES = DUMP_TIME_ENTRIES = (err, resp, body) ->
+#
+module.exports.DUMP_TIME_ENTRIES = DUMP_TIME_ENTRIES = (err, time_entries) ->
   if err
     console.error "#{resp.request.method}\t#{resp.request.uri.href}"
     console.error err
   else
-    te = JSON.parse body
     total = 0
-    for t in te.time_entries
-      console.log "| #{t.hours}\t| #{t.user.name}\t| #{t.comments} |"
+    console.log dup "-", 112
+    console.log "| #{padRight loc.time, 8} | #{padRight loc.user, 30} | #{padRight loc.date, 10} | #{padRight loc.issue, 8} | #{padRight loc.project, 40} |"
+    console.log dup "-", 112
+    for t in time_entries
+      usr = "#{t.user.name} [#{t.user.id}]"
+      console.log "| #{padRight t.hours.toFixed(2), 8} | #{padRight usr, 30} | #{t.spent_on} | #{padRight t.issue.id.toString(), 8} | #{padRight t.project.name, 40} |"
       total += t.hours
-    console.log "----------------------------------------"
-    console.log "total: #{total} hours"
+    console.log dup "-", 112
+    console.log "total: #{total.toFixed 2} hours"
+
 
 
 #
@@ -347,6 +382,7 @@ class RedmineAPI
   #
   getProjects: (opts={}, fn=DUMP_PROJECTS) ->
     GET "projects.json", @config, opts, fn
+
 
 
   #
@@ -428,7 +464,6 @@ class RedmineAPI
 
     @getProjectUsers project_id: opts.project_id, (err) =>
 
-
       if err
         return console.error "#{@loc.error_fetching_user}: #{JSON.stringify user, null, 2}".red
       for k,v of @fetched_objects.users
@@ -460,7 +495,6 @@ class RedmineAPI
           console.log JSON.stringify resp, null, 2
 
 
-
   #
   # Public: Get project users by collecting all issues and fetch users
   #
@@ -480,14 +514,12 @@ class RedmineAPI
 
         fn null, @fetched_objects
 
-        # for k,v of @fetched_objects.users # TODO refactor this
-        #   console.log "| #{k}\t| #{padRight v, 30} |"
 
   #
-  # Public: Get users
   #
+  # Public: Get users (performed by admin!)
   #
-  getUsers: (opts={}, fn=DUMP_JSON_BODY) ->
+  getUsers: (opts={}, fn=DUMP_USERS) ->
     GET "users.json", @config, opts, fn
 
   #
@@ -508,11 +540,43 @@ class RedmineAPI
 
 
   #
-  # Public: Get timeline entries
+  # Public: Get time entries
   #
   #
   getTimeEntries: (opts={}, fn=DUMP_TIME_ENTRIES) ->
-    GET "time_entries.json", @config, opts, fn
+    dumpTimeEntries = (err, time_entries) ->
+      if err
+        fn err
+      else
+        time_entries = JSON.parse(time_entries).time_entries if "string" is typeof time_entries
+        fn null, time_entries
+
+
+    if opts.period is "week"    # get last week
+      delete opts.period
+      # set limit to 100 records and
+      opts.limit = 100
+      day = if opts.spent_on then new Date(opts.spent_on) else new Date
+
+      delete opts.spent_on      # TODO this make works buggy on later dates
+      days = []
+      [0...7].map ->
+        days.push day.pretty_string()
+        day.setDate day.getDate() - 1
+
+      GET "time_entries.json", @config, opts, (err, resp, body) ->
+        if err
+          console.error "#{resp.request.method}\t#{resp.request.uri.href}"
+          console.error err
+          dumpTimeEntries err
+        else
+          time_entries = JSON.parse(body).time_entries
+          time_entries = time_entries.filter (te) -> te.spent_on in days
+          dumpTimeEntries null, time_entries
+
+    else
+      GET "time_entries.json", @config, opts, (err, resp, body) ->
+        dumpTimeEntries err, body
 
   #
   # Public: Get issues statuses
@@ -542,7 +606,7 @@ class RedmineAPI
 
 
   #
-  # Public: Return true if issue is done/
+  # Public: Return true if issue is done
   #
   # TODO read id status from config.
   #

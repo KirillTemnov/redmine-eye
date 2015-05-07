@@ -21,6 +21,7 @@ messages.ru =
   issue                   : "задача"
   date                    : "дата"
   comment                 : "комментарий"
+  project                 : "проект"
 
 
 
@@ -40,6 +41,7 @@ messages.en =
   issue                   : "issue"
   date                    : "date"
   comment                 : "comment"
+  project                 : "project"
 
 
 exports.m = messages
