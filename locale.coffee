@@ -20,7 +20,7 @@ messages.ru =
 
   config_saved            : "Конфигурация сохранена"
 
-  total_hours             : "Всего часов: "
+  total_hours             : "всего часов"
 
   # prompts
   prompt_redmine_url     : "URL Redmine, начиная с http(s): "
@@ -55,7 +55,7 @@ messages.en =
 
   config_saved            : "Configuration saved"
 
-  total_hours             : "Total hours: "
+  total_hours             : "total hours"
 
   # prompts
   prompt_redmine_url     : "Redmine url, starting from http(s): "

@@ -348,15 +348,24 @@ module.exports.DUMP_TIME_ENTRIES = DUMP_TIME_ENTRIES = (err, time_entries) ->
   else
     total = 0
     console.log dup "-", 112
+    last_usr = ""
     console.log "| #{padRight loc.time, 8} | #{padRight loc.user, 30} | #{padRight loc.date, 10} | #{padRight loc.issue, 8} | #{padRight loc.project, 40} |"
     console.log dup "-", 112
     for t in time_entries
       usr = "#{t.user.name} [#{t.user.id}]"
+      unless usr is last_usr
+        last_usr = usr
+        if 0 < total
+          console.log dup "-", 112
+          console.log "| #{padRight total.toFixed(2), 8} | #{padRight loc.total_hours, 97} |"
+          console.log dup "-", 112
+        total = 0
+
       console.log "| #{padRight t.hours.toFixed(2), 8} | #{padRight usr, 30} | #{t.spent_on} | #{padRight t.issue.id.toString(), 8} | #{padRight t.project.name, 40} |"
       total += t.hours
     console.log dup "-", 112
-    console.log "#{loc.total_hours}#{total.toFixed 2}"
-
+    console.log "| #{padRight total.toFixed(2), 8} | #{padRight loc.total_hours, 97} |"
+    console.log dup "-", 112
 
 
 #
@@ -547,6 +556,8 @@ class RedmineAPI
         fn err
       else
         time_entries = JSON.parse(time_entries).time_entries if "string" is typeof time_entries
+        # sort by user id
+        time_entries = time_entries.sort (a,b) -> a.user.id - b.user.id
         fn null, time_entries
 
 
