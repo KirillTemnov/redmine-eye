@@ -1,6 +1,6 @@
 {
   "name": "redmine-eye",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "Watching Redmine activity, execute similar tasks, eval statistics",
   "main": "index.coffee",
   "dependencies": {

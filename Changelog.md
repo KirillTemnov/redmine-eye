@@ -1,8 +1,12 @@
 # v0.8.0
 
- - imporve time command - entries sorted by user id and printed by block
  - TODO improve log command - make issues like tables
  - TODO store dome and process issue id in config
+
+# v0.7.6
+
+ - imporve time command - entries sorted by user id and printed by block
+ - extend period command - add integer for days
 
 # v0.7.5
 

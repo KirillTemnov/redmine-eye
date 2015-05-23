@@ -561,7 +561,8 @@ class RedmineAPI
         fn null, time_entries
 
 
-    if opts.period is "week"    # get last week
+    if opts.period?
+      period = if "week" is opts.period then 7 else parseInt opts.period
       delete opts.period
       # set limit to 100 records and
       opts.limit = 100
@@ -569,7 +570,7 @@ class RedmineAPI
 
       delete opts.spent_on      # TODO this make works buggy on later dates
       days = []
-      [0...7].map ->
+      [0...period].map ->
         days.push day.pretty_string()
         day.setDate day.getDate() - 1
 
