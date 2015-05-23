@@ -60,6 +60,24 @@ padRight = (str, length, symbol=" ") ->
   else
     str + dup symbol, restLen
 
+#
+# Internal: Insert symbols from left and right of specified string
+#
+#
+padCenter = (str, length, symbol=" ") ->
+  str = str.toString()
+  restLen = length - str.length
+  if restLen < 0
+    str[0...length-2] + ".."
+  else
+    if 0 is restLen % 2
+      l1 = l2 = restLen / 2
+    else
+      l1 = l2 = parseInt restLen / 2
+      l2++
+    "#{dup symbol, l1}#{str}#{dup symbol, l2}"
+
+
 
 #
 # Public: Copy arguments from command line
@@ -284,12 +302,11 @@ module.exports.DUMP_STATUSES = DUMP_STATUSES = (err, resp, body) ->
     console.log "|  ID  | #{padRight loc.statuses_name, 30} | #{padRight loc.statuses_is_default, 12}  |  #{padRight loc.statuses_is_closed, 10} |"
     console.log dup "=", 71
     for s in body.issue_statuses
-      str = ["| #{padRight s.id, 4} | #{padRight s.name, 30} | "]
-      str.push " #{padRight (if s.is_default then 'V' else ' '), 12} | "
-      str.push " #{padRight (if s.is_closed then 'V' else ' '), 10} |"
+      str = ["| #{padCenter s.id, 4} | #{padRight s.name, 30} | "]
+      str.push " #{padCenter (if s.is_default then 'V' else ' '), 12} | "
+      str.push " #{padCenter (if s.is_closed then 'V' else ' '), 10} |"
       console.log str.join ""
     console.log dup "=", 71
-
   else
     console.error err
 
@@ -316,8 +333,10 @@ module.exports.DUMP_USERS = DUMP_USERS = (err, resp, body) ->
 
   if err is null
     body = JSON.parse body
+    console.log dup "=", 41
     for u in body.users
       console.log "| #{padRight u.id.toString(), 4} | #{padRight u.firstname + ' ' + u.lastname, 30} |"
+    console.log dup "=", 41
   else
     console.error "#{resp.request.method}\t#{resp.request.uri.href}"
     console.error err
@@ -335,7 +354,7 @@ module.exports.DUMP_PROJECTS = DUMP_PROJECTS = (err, resp, body) ->
     console.error err
   else
     prj =  JSON.parse body
-    for p in prj.projects
+    for p in prj.projects       # TODO make nicer
       console.log "#{p.id}\t\t#{p.name}"
 
 
@@ -351,10 +370,24 @@ module.exports.DUMP_JSON = DUMP_JSON = (err, jsonData) ->
 module.exports.DUMP_ISSUES = DUMP_ISSUES = (err, issues) ->
   return if err
 
+  formatAuthor = (author) ->
+    str = author.split " "
+    if 2 <= str.length
+      str[0][0..3] + " " + str[1][0] + "."
+    else
+      padRight str[0][0..5], 7
+
   for i in issues
-    # TODO formatting (!)
-    console.log "##{i.id}\t#{i.tracker.name}\t#{i.status.name}\t|#{i.author.name} ->" +
-      " #{i.assigned_to? and i.assigned_to.name or 'nil'}| #{i.subject}"
+    s = ["| #{padCenter i.id, 6}/#{i.status.id} |"]
+    s.push " #{i.tracker.name[0]}"
+    s.push " #{i.status.name[0]} |"
+
+    who = "#{formatAuthor i.author.name} ⇒ #{i.assigned_to? and formatAuthor(i.assigned_to.name) or 'nil'}"
+    s.push " #{padRight who, 18} |"
+    s.push " #{padRight i.subject, 100} |"
+    console.log s.join ""
+  console.log dup "=", 140
+  console.log ""
 
 
 #
@@ -366,10 +399,11 @@ module.exports.DUMP_TIME_ENTRIES = DUMP_TIME_ENTRIES = (err, time_entries) ->
     console.error "#{resp.request.method}\t#{resp.request.uri.href}"
     console.error err
   else
+    global_total = 0
     total = 0
     console.log dup "-", 112
     last_usr = ""
-    console.log "| #{padRight loc.time, 8} | #{padRight loc.user, 30} | #{padRight loc.date, 10} | #{padRight loc.issue, 8} | #{padRight loc.project, 40} |"
+    console.log "| #{padCenter loc.time, 8} | #{padRight loc.user, 30} | #{padRight loc.date, 10} | #{padRight loc.issue, 8} | #{padRight loc.project, 40} |"
     console.log dup "-", 112
     for t in time_entries
       usr = "#{t.user.name} [#{t.user.id}]"
@@ -379,13 +413,19 @@ module.exports.DUMP_TIME_ENTRIES = DUMP_TIME_ENTRIES = (err, time_entries) ->
           console.log dup "-", 112
           console.log "| #{padRight total.toFixed(2), 8} | #{padRight loc.total_hours, 97} |"
           console.log dup "-", 112
+        global_total += total
         total = 0
 
       console.log "| #{padRight t.hours.toFixed(2), 8} | #{padRight usr, 30} | #{t.spent_on} | #{padRight t.issue.id.toString(), 8} | #{padRight t.project.name, 40} |"
       total += t.hours
+
+    global_total += total
     console.log dup "-", 112
     console.log "| #{padRight total.toFixed(2), 8} | #{padRight loc.total_hours, 97} |"
     console.log dup "-", 112
+    console.log ""
+    console.log "#{loc.total_hours.bold} : #{global_total.toFixed 2}"
+    console.log ""
 
 
 #

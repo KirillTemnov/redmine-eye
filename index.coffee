@@ -21,6 +21,7 @@ COMMANDS:
   conf          - configuration
   project-stat  - statistics on project tasks
   stat          - statistics on project users
+  statuses      - list of statuses
   user          - user stat in project
   help          - help on command
 

@@ -1,6 +1,7 @@
-# v0.8.0
 
- - TODO improve log command - make issues like tables
+# v0.8.0 (pending)
+
+ - improve log command - make issues like tables
  - TODO store done and process issue id in config
  - TODO add teams (group peoples)
 
