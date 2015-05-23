@@ -14,6 +14,7 @@ if /ru_RU/.test process.env.LANG
 else
   loc    = locale.en
 
+
 #
 # Internal: duplicate symbol
 #
@@ -52,6 +53,7 @@ normalize = (val, maxVal, maxChars) ->
 #
 #
 padRight = (str, length, symbol=" ") ->
+  str = str.toString()
   restLen = length - str.length
   if restLen < 0
     str[0...length-2] + ".."
@@ -121,7 +123,7 @@ module.exports.PRINT_PROJECT_STATS = PRINT_PROJECT_STATS = (err, fetched_objects
 # Public: Print users stats by project to console
 #
 #
-module.exports.PRINT_USERS_STAT = PRINT_USERS_STAT = (err, fetched_objects, opts={}, loc) ->
+module.exports.PRINT_USERS_STAT = PRINT_USERS_STAT = (err, fetched_objects, opts={}) ->
   if err
     return console.error loc.error_fetching_issues.red
 
@@ -272,6 +274,24 @@ module.exports.GET = GET = (url, config, opts, fn) ->
 
     fn err or status: resp.statusCode, resp, body
 
+#
+# Public: Dump statuses
+#
+#
+module.exports.DUMP_STATUSES = DUMP_STATUSES = (err, resp, body) ->
+  if null is err
+    body = JSON.parse body
+    console.log "|  ID  | #{padRight loc.statuses_name, 30} | #{padRight loc.statuses_is_default, 12}  |  #{padRight loc.statuses_is_closed, 10} |"
+    console.log dup "=", 71
+    for s in body.issue_statuses
+      str = ["| #{padRight s.id, 4} | #{padRight s.name, 30} | "]
+      str.push " #{padRight (if s.is_default then 'V' else ' '), 12} | "
+      str.push " #{padRight (if s.is_closed then 'V' else ' '), 10} |"
+      console.log str.join ""
+    console.log dup "=", 71
+
+  else
+    console.error err
 
 #
 # Public: Dump body of request
@@ -591,7 +611,7 @@ class RedmineAPI
   # Public: Get issues statuses
   #
   #
-  getIssueStatuses: (opts={}, fn=DUMP_JSON_BODY) ->
+  getIssueStatuses: (opts={}, fn=DUMP_STATUSES) ->
     #pid = opts.pid || config.pid
     GET "/issue_statuses.json", @config, opts, fn
 
@@ -607,11 +627,10 @@ class RedmineAPI
   #
   # Public: Return true if issue is closed
   #
-  # TODO read id status from config.
-  # for now just hardcode it to 5
   #
   issueClosed: (issue) ->
-    5 is issue.status.id
+    closeStatuses = (@config.get("closeStatuses") or "").toString().split(",").map (x) -> parseInt x
+    issue.status.id in closeStatuses
 
 
   #
@@ -620,7 +639,8 @@ class RedmineAPI
   # TODO read id status from config.
   #
   issueDone: (issue) ->
-    (100 is issue.done_ratio) or issue.status.id in [3, 5, 6]
+    doneStatuses = (@config.get("doneStatuses") or  "").toString().split(",").map (x) -> parseInt x
+    (100 is issue.done_ratio) or issue.status.id in doneStatuses
 
   #
   # Public: Issue in process
@@ -628,7 +648,8 @@ class RedmineAPI
   # TODO read id status from config.
   #
   issueInProcess: (issue) ->
-    2 is issue.status.id
+    processStatuses = (@config.get("processStatuses") or "").toString().split(",").map (x) -> parseInt x
+    issue.status.id in processStatuses
 
   #
   # Public: Get issues statistics by projects

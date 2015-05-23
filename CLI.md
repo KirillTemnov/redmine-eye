@@ -61,6 +61,19 @@ ry time [options]
 
 Show stat on project by users
 
+### NOTE:
+
+Before you start set config for issue states:
+
+```bash
+ry conf doneStatuses 4
+ry conf closeStatuses 2,4,6
+ry conf processStatuses 7,11
+```
+
+Get values for statuses from `ry statuses`
+
+
 ### Options
 
 #### `sort`

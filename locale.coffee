@@ -37,7 +37,10 @@ messages.ru =
   error_saving_configuration   : "Ошибка при сохранении конфигурации"
   error_testing_api            : "Ошибка при тестировании Redmine API. Проверьте url, port, api_key и попробуйте снова."
 
-
+  # statuses
+  statuses_name       : "название"
+  statuses_is_default : "по умолчанию"
+  statuses_is_closed  : "закрывает"
 
 
 messages.en =
@@ -71,6 +74,11 @@ messages.en =
   error_redmine_call_check_api : "Error calling Redmine API. Check api_key parameter."
   error_saving_configuration   : "Error saving configuration"
   error_testing_api            : "Error testing API. Check url, port, api_key and retry."
+
+  # statuses
+  statuses_name       : "name"
+  statuses_is_default : "default"
+  statuses_is_closed  : "closed"
 
 
 exports.m = messages

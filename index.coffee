@@ -114,8 +114,10 @@ if ("issue" in argv._) or ("i" in argv._)
   api.createIssue ARGV, argv._[1..].join " "
 
 if "statuses" in argv._
-  api.getIssueStatuses()
-
+  if DEBUG_MODE
+    api.getIssueStatuses {}, DUMP_JSON_BODY
+  else
+    api.getIssueStatuses()
 
 if "trackers" in argv._
   api.getTrackers ARGV
