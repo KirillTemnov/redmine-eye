@@ -11,7 +11,8 @@
 - [X] make accessible `ry` command (instead of `index.coffee`)
 - [ ] symbols for trackers
 - [ ] symbols for issue states
-- localize usage in `cli`
+- [ ] alias for commands (like saved searches)
+- [ ] localize usage in `cli`
 
 
 ### User features
