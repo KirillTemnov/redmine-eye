@@ -12,7 +12,7 @@ usage = """
 Usage: ry COMMAND [--debug] [--pid PROJECT_ID]
 
 COMMANDS:
-  projects      - list porjects(--limit, --offset)
+  projects      - list projects(--limit, --offset)
   log           - list of issues
   time          - work time
   issue         - create an issue
@@ -24,7 +24,7 @@ COMMANDS:
   statuses      - list of statuses
   user          - user stat in project
   help          - help on command
-
+  team, teams   - manage teams
 
 """
 argv = require("optimist").usage(usage).argv
