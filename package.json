@@ -1,8 +1,8 @@
 {
   "name": "redmine-eye",
-  "version": "0.7.6",
+  "version": "0.7.8",
   "description": "Watching Redmine activity, execute similar tasks, eval statistics",
-  "main": "index.coffee",
+  "main": "redmine-api.coffee",
   "dependencies": {
     "request": "*",
     "optimist": "*",

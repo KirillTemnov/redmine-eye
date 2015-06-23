@@ -358,7 +358,9 @@ module.exports.DUMP_PROJECTS = DUMP_PROJECTS = (err, resp, body) ->
       console.log "#{p.id}\t\t#{p.name}"
 
 
-
+#
+# Public: Dump json data co console
+#
 module.exports.DUMP_JSON = DUMP_JSON = (err, jsonData) ->
   return if err
   console.log "#{JSON.stringify jsonData, null, 2}"
@@ -370,6 +372,10 @@ module.exports.DUMP_JSON = DUMP_JSON = (err, jsonData) ->
 module.exports.DUMP_ISSUES = DUMP_ISSUES = (err, issues) ->
   return if err
 
+  #
+  # Make short representation of author string
+  #
+  #
   formatAuthor = (author) ->
     str = author.split " "
     if 2 <= str.length
@@ -381,7 +387,6 @@ module.exports.DUMP_ISSUES = DUMP_ISSUES = (err, issues) ->
     s = ["| #{padCenter i.id, 6}/#{i.status.id} |"]
     s.push " #{i.tracker.name[0]}"
     s.push " #{i.status.name[0]} |"
-
     who = "#{formatAuthor i.author.name} ⇒ #{i.assigned_to? and formatAuthor(i.assigned_to.name) or 'nil'}"
     s.push " #{padRight who, 18} |"
     s.push " #{padRight i.subject, 100} |"

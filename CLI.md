@@ -6,7 +6,7 @@ ry command opts
 
 Commands shown below
 
-## List projects
+## List projects (`projects`)
 
 ```
 ry projects
@@ -18,10 +18,16 @@ By default redmine returns 25 projects (not documented). For access other projec
 ry projects --limit 42
 ```
 
+## Teams (`team`, `teams`)
+
+Work with teams documented in [separate file](teams.md)
 
 
+## Show statuses (`statuses`)
 
-## log
+Show list of statuses with id
+
+## Show issues (`log`)
 
 Show log for issues
 
@@ -36,10 +42,10 @@ If no options provided, last issues will shown.
 `pid` - project id
 
 
-## List time
+## Show spend time (`time`)
 
 
-Show user and time
+Show user and issue(s), project(s) and spended time
 
 ```
 ry time [options]
@@ -76,7 +82,7 @@ Get values for statuses from `ry statuses`
 
 ### Options
 
-#### `sort`
+#### Sorting results (`sort`)
 
 Sort resulst by
 
@@ -89,7 +95,7 @@ Sort resulst by
 | `done`    | sort by done tasks        | |
 
 
-## i (issue)
+## Create issue (`i`, `issue`)
 
 create new task
 
@@ -98,3 +104,6 @@ ry issue --pid 111 -t ошибка -p 2 --to Петров --vID 123 Встави
 
 
 ### fields
+
+
+## teams TODO

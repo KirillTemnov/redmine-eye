@@ -50,7 +50,10 @@ if "conf" in argv._
   if 2 is argv._.length
     console.log config.get(argv._[1]) or "{not found}"
   if 3 is argv._.length
-    config.set argv._[1], argv._[2]
+    if "del" is argv._[1]       # remove element
+      config.clear argv._[2]
+    else
+      config.set argv._[1], argv._[2]
     config.save (err) ->
       if err
         console.error "error saving config"
@@ -122,3 +125,41 @@ if "statuses" in argv._
 
 if "trackers" in argv._
   api.getTrackers ARGV
+
+
+
+if "team" is argv._[0]
+  [name, action, ids] = argv._[1..]
+
+  teams = config.get("teams") or {}
+  switch action
+    when "list"
+      console.log teams[name]
+      return
+    when "add"
+      unless teams[name]?
+        teams[name] = []
+
+      ids.split(",").map (id) ->
+        unless id in teams[name]
+          teams[name].push id
+    when "remove", "rm"
+      if teams[name]?
+        rmMembers = ids.split ","
+        newTeam = []
+        for i in teams[name]
+          newTeam.push i unless i in rmMembers
+        teams[name] = newTeam
+        delete teams[name] if 0 is newTeam.length
+    else
+      return                    # don't save anything
+  config.set "teams", teams
+  config.save (err) ->
+    if err
+      console.error "error saving team"
+    else
+      console.log "team updated"
+
+if "teams" is argv._[0]
+  for k,v of config.get("teams") or {}
+    console.log k

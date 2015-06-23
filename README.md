@@ -47,13 +47,15 @@ Use command line interface for access all library tools from console.
 Before start use library you should initialize it with code:
 
 ```coffee
-Rapi = require "./redmine-api"
+nconf = require "nconf" # add libraty to pass config
+
+rmAPI = require("redmine-eye").RedmineAPI
 nconf.use "memory"
 nconf.set "host", "https://redmine.example.com"
 nconf.set "port", "80"
 nconf.set "api_key", "my-redmine-api-key-here"
 
-api = new Rapi nconf
+api = new rmAPI nconf
 
 ```
 
