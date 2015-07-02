@@ -383,6 +383,7 @@ module.exports.DUMP_ISSUES = DUMP_ISSUES = (err, issues) ->
     else
       padRight str[0][0..5], 7
 
+  console.log dup "=", 140
   for i in issues
     s = ["| #{padCenter i.id, 6}/#{i.status.id} |"]
     s.push " #{i.tracker.name[0]}"
@@ -394,6 +395,42 @@ module.exports.DUMP_ISSUES = DUMP_ISSUES = (err, issues) ->
   console.log dup "=", 140
   console.log ""
 
+
+#
+# Public: Dump user issues, sorted by priority
+#
+#
+module.exports.DUMP_USER_SORTED_ISSUES = DUMP_USER_SORTED_ISSUES = (err, issues) ->
+  if err
+    console.error "Error: #{JSON.stringify err, null, 2}"
+    return
+
+  if 0 < issues.length
+    console.log "#{issues[0].assigned_to.name}".bold + " [ #{issues[0].assigned_to.id} ]".grey
+    console.log dup "_", 120
+  else
+    return console.log "no records" # TODO add localization
+
+  applyColor = (p, str) ->
+    switch p
+      when 1
+        str.blue
+      when 2
+        str.green
+      when 3
+        str.yellow
+      when 4
+        str.red
+      when 5
+        str.white.bgRed.bold
+
+  issues = issues.sort (a,b) -> b.priority.id - a.priority.id
+  for i in issues
+    s = [i.id]
+    s.push padRight i.status.name, 10
+    s.push padRight i.subject, 100
+    console.log applyColor i.priority.id, s.join " | "
+  console.log ""
 
 #
 # Public: Dump time entries
