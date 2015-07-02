@@ -25,6 +25,7 @@ COMMANDS:
   user          - user stat in project
   help          - help on command
   team, teams   - manage teams
+  watch         - filter tasks
 
 """
 argv = require("optimist").usage(usage).argv
@@ -66,7 +67,7 @@ return unless setup()
 
 #console.log "ARGV = #{JSON.stringify argv, null, 2}"
 
-{copyArgv, DUMP_JSON_BODY, DUMP_JSON, RedmineAPI} = require "./redmine-api"
+{copyArgv, DUMP_JSON_BODY, DUMP_JSON, DUMP_USER_SORTED_ISSUES, RedmineAPI} = require "./redmine-api"
 
 api = new RedmineAPI config
 
@@ -83,6 +84,34 @@ if "log" in argv._
     api.getIssues ARGV, DUMP_JSON
   else
     api.getIssues ARGV
+
+# watch my tasks
+if "watch" in argv._
+  argv._.shift()
+  who = argv._           # list of users/groups
+  ARGV.status_id       = "open"
+  ARGV.limit         ||= 100
+
+  who = ["me"] if 0 is who.length
+  teams = config.get("teams") or {}
+
+  for name in who
+    userArgs = copyArgv ARGV
+
+    # search team
+    if teams[name]?
+      for person_id in teams[name]
+        teamUserArgs = copyArgv ARGV
+        teamUserArgs.assigned_to_id = person_id
+        api.getIssues teamUserArgs, DUMP_USER_SORTED_ISSUES
+    else
+      if name is "me"
+        userArgs.assigned_to_id = "me"
+      else if /^\d+$/.test name
+        userArgs.assigned_to_id = name
+      else
+        continue
+      api.getIssues userArgs, DUMP_USER_SORTED_ISSUES
 
 
 if ("ms" in argv._) or ("versions" in argv._)
@@ -132,6 +161,7 @@ if "team" is argv._[0]
   [name, action, ids] = argv._[1..]
 
   teams = config.get("teams") or {}
+  action ||= "list"
   switch action
     when "list"
       console.log teams[name]
@@ -140,12 +170,13 @@ if "team" is argv._[0]
       unless teams[name]?
         teams[name] = []
 
-      ids.split(",").map (id) ->
+      ids.toString().split(",").map (id) ->
+        return if not id or 0 is id.length
         unless id in teams[name]
           teams[name].push id
     when "remove", "rm"
       if teams[name]?
-        rmMembers = ids.split ","
+        rmMembers = ids.toString().split ","
         newTeam = []
         for i in teams[name]
           newTeam.push i unless i in rmMembers
