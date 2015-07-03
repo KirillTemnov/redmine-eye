@@ -19,6 +19,7 @@ They may be changed later with `ry conf NAME VALUE` command.
 | `port`       | Redmine server port | yes |
 | `api_key`    | user API key | yes |
 | `check_cert` | check `https` certificate | no |
+| `admin`      | Redmine administrator. Set `yes`, if **you** have admin rights  | no |
 
 
 
