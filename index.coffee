@@ -77,20 +77,23 @@ api = new RedmineAPI config
 
 ARGV = copyArgv argv
 
-if "projects" in argv._
+if "projects" is argv._[0]
   if DEBUG_MODE
     api.getProjects ARGV, DUMP_JSON_BODY
   else
     api.getProjects ARGV
-if "log" in argv._
+  return
+
+if "log" is argv._[0]
   ARGV.status_id = "*"          # TODO watch this!
   if DEBUG_MODE
     api.getIssues ARGV, DUMP_JSON
   else
     api.getIssues ARGV
+  return
 
 # watch my tasks
-if "watch" in argv._
+if "watch" is argv._[0]
   argv._.shift()
   who               = argv._           # list of users/groups
   ARGV.status_id  ||= "open"
@@ -101,7 +104,6 @@ if "watch" in argv._
 
   for name in who
     userArgs = copyArgv ARGV
-
     # search team
     if teams[name]?
       for person_id in teams[name]
@@ -117,21 +119,23 @@ if "watch" in argv._
         continue
       api.getIssues userArgs, DUMP_USER_SORTED_ISSUES
 
+  return
 
-if ("ms" in argv._) or ("versions" in argv._)
+if argv._[0] in ["ms", "versions"]
   if DEBUG_MODE
     api.getVersions pid: argv.pid, DUMP_JSON_BODY
   else
     api.getVersions pid: argv.pid
+  return
 
-if ("time" in argv._)
+if "time" is argv._[0]
   if DEBUG_MODE
     api.getTimeEntries ARGV, DUMP_JSON
   else
     api.getTimeEntries ARGV
+  return
 
-if "users" in argv._
-  #console.log "call users"
+if "users" is argv._[0]
   ARGV.limit ||= 100              # Lifehack
   if "yes" is config.get "admin"
     api.getUsers ARGV
@@ -140,32 +144,36 @@ if "users" in argv._
       console.error "You are not admin. Set `admin` option in config, or set `--pid` option".red # TODO add localization
     else
       api.getProjectUsers ARGV  # TODO change dump function
+  return
 
-
-if "project-stat" in argv._
+if "project-stat" is argv._[0]
   api.getProjectStat ARGV
+  return
 
-if "stat" in argv._
+if "stat" is argv._[0]
   unless ARGV.sort in ["name", "created", "work", "closed", "done"]
     ARGV.sort = "created"
   api.getUsersStat ARGV
+  return
 
-if ("user" in argv._) or ("me" in argv._) or ("self" in argv._)
+if "user" is argv._[0]
   api.getUserStat ARGV
+  return
 
-if ("issue" in argv._) or ("i" in argv._)
+if argv._[0] in ["issue", "i"]
   api.createIssue ARGV, argv._[1..].join " "
   return
 
-if "statuses" in argv._
+if "statuses" is argv._[0]
   if DEBUG_MODE
     api.getIssueStatuses {}, DUMP_JSON_BODY
   else
     api.getIssueStatuses()
+  return
 
-if "trackers" in argv._
+if "trackers" is argv._[0]
   api.getTrackers ARGV
-
+  return
 
 
 if "team" is argv._[0]
@@ -238,7 +246,9 @@ if "team" is argv._[0]
       console.error "error saving team"
     else
       console.log "team updated"
+  return
 
 if "teams" is argv._[0]
   for k,v of config.get("teams") or {}
     console.log k
+  return
