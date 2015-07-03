@@ -26,6 +26,7 @@ COMMANDS:
   help          - help on command
   team, teams   - manage teams
   watch         - filter tasks
+  users         - list of redmine users (fetch all users only by admin)
 
 """
 argv = require("optimist").usage(usage).argv
@@ -67,7 +68,9 @@ return unless setup()
 
 #console.log "ARGV = #{JSON.stringify argv, null, 2}"
 
-{copyArgv, DUMP_JSON_BODY, DUMP_JSON, DUMP_USER_SORTED_ISSUES, RedmineAPI} = require "./redmine-api"
+{copyArgv, padRight, dup, DUMP_JSON_BODY, DUMP_JSON, DUMP_USERS, DUMP_USER_SORTED_ISSUES, RedmineAPI} = require "./redmine-api"
+
+#--------------------------------------------------------------------------------
 
 api = new RedmineAPI config
 
@@ -88,12 +91,12 @@ if "log" in argv._
 # watch my tasks
 if "watch" in argv._
   argv._.shift()
-  who = argv._           # list of users/groups
-  ARGV.status_id       = "open"
-  ARGV.limit         ||= 100
+  who               = argv._           # list of users/groups
+  ARGV.status_id  ||= "open"
+  ARGV.limit      ||= 100
 
-  who = ["me"] if 0 is who.length
-  teams = config.get("teams") or {}
+  who               = ["me"] if 0 is who.length
+  teams             = config.get("teams") or {}
 
   for name in who
     userArgs = copyArgv ARGV
@@ -101,14 +104,14 @@ if "watch" in argv._
     # search team
     if teams[name]?
       for person_id in teams[name]
-        teamUserArgs = copyArgv ARGV
-        teamUserArgs.assigned_to_id = person_id
+        teamUserArgs                 = copyArgv ARGV
+        teamUserArgs.assigned_to_id  = person_id
         api.getIssues teamUserArgs, DUMP_USER_SORTED_ISSUES
     else
       if name is "me"
-        userArgs.assigned_to_id = "me"
+        userArgs.assigned_to_id      = "me"
       else if /^\d+$/.test name
-        userArgs.assigned_to_id = name
+        userArgs.assigned_to_id      = name
       else
         continue
       api.getIssues userArgs, DUMP_USER_SORTED_ISSUES
@@ -128,8 +131,14 @@ if ("time" in argv._)
 
 if "users" in argv._
   #console.log "call users"
-  api.getUsers ARGV
-  #api.getProjectUsers ARGV
+  ARGV.limit ||= 100              # Lifehack
+  if "yes" is config.get "admin"
+    api.getUsers ARGV
+  else
+    unless ARGV["pid"] or ARGV["project_id"]
+      console.error "You are not admin. Set `admin` option in config, or set `--pid` option".red # TODO add localization
+    else
+      api.getProjectUsers ARGV  # TODO change dump function
 
 
 if "project-stat" in argv._
@@ -140,11 +149,12 @@ if "stat" in argv._
     ARGV.sort = "created"
   api.getUsersStat ARGV
 
-if "user" in argv._
+if ("user" in argv._) or ("me" in argv._) or ("self" in argv._)
   api.getUserStat ARGV
 
 if ("issue" in argv._) or ("i" in argv._)
   api.createIssue ARGV, argv._[1..].join " "
+  return
 
 if "statuses" in argv._
   if DEBUG_MODE
@@ -162,9 +172,46 @@ if "team" is argv._[0]
 
   teams = config.get("teams") or {}
   action ||= "list"
+  getNameAndId   = (id, name) -> "| #{padRight id, 4} | #{padRight name, 30} |"
+  printNameAndID = (id, name) -> console.log getNameAndId id, name
+
   switch action
     when "list"
-      console.log teams[name]
+      console.log ""                 # TODO move this ugly peace of code somewhere
+      if "yes" is config.get "admin" # show admin users
+        ARGV.limit = 100
+        api.getUsers ARGV, (err, resp, body) ->
+
+          if err is null
+            body = JSON.parse body
+            console.log dup "=", 41
+            for u in body.users
+              if u.id.toString() in teams[name]
+                printNameAndID "#{u.id}", "#{u.firstname} #{u.lastname}"
+
+
+            if "me" in teams[name]
+              api.getCurrentUser (err, resp, body) ->
+                if err
+                  console.log getNameAndId("me", "Can't fetch my name").red
+                else
+                  me = JSON.parse body
+                  console.log getNameAndId("#{me.user.id}", "#{me.user.firstname} #{me.user.lastname}").bold
+                  console.log dup "=", 41
+                  console.log ""
+            else
+              console.log dup "=", 41
+              console.log ""
+          else
+            console.error "#{resp.request.method}\t#{resp.request.uri.href}"
+            console.error err
+
+
+      else
+        console.log dup "=", 41
+        teams[name].map (id) -> printNameAndID id, "user ...."
+        console.log dup "=", 41
+        console.log ""
       return
     when "add"
       unless teams[name]?

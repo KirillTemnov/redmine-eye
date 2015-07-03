@@ -16,29 +16,32 @@ else
 
 
 #
-# Internal: duplicate symbol
+# Public: duplicate symbol
 #
 # :sym - symbol to duplicate
 # :times - times to duplicate
 # :return duplicated string
 #
-dup = (sym="#", times=10) ->
+module.exports.dup = dup = (sym="#", times=10) ->
   if times > 0
     ([1..times].map -> sym).join ""
   else
     ""
 
 #
-# Public: Extends (oh my god!) Date object
+# Internal: Extends (oh my god!) Date object
 #
 #
-Date::pretty_string = ->
-  zero_pad = (x) -> if x < 10 then '0'+x else ''+x
+Date::pretty_string = (fmt="yyyy-mm-dd") ->
+  zero_pad = (x) -> if x < 10 then "0#{x}" else "#{x}"
   d = zero_pad(@getDate())
   m = zero_pad(@getMonth() + 1)
   y = @getFullYear()
-  "#{y}-#{m}-#{d}"
-
+  switch fmt
+    when "yyyy-mm-dd"
+      "#{y}-#{m}-#{d}"
+    else
+      "date format undefined"
 
 #
 # Internal: normalize value and max value to chars
@@ -49,10 +52,10 @@ normalize = (val, maxVal, maxChars) ->
   Math.round persent * maxChars
 
 #
-# Internal: Insert symbols from right of specified string
+# Public: Insert symbols from right of specified string
 #
 #
-padRight = (str, length, symbol=" ") ->
+module.exports.padRight = padRight = (str, length, symbol=" ") ->
   str = str.toString()
   restLen = length - str.length
   if restLen < 0
@@ -406,7 +409,10 @@ module.exports.DUMP_USER_SORTED_ISSUES = DUMP_USER_SORTED_ISSUES = (err, issues)
     return
 
   if 0 < issues.length
-    console.log "#{issues[0].assigned_to.name}".bold + " [ #{issues[0].assigned_to.id} ]".grey
+    user = "#{issues[0].assigned_to.name}".bold +
+      " (#{issues.length}) ".bold +
+      " [ id:#{issues[0].assigned_to.id} ]".grey
+    console.log user
     console.log dup "_", 120
   else
     return console.log "no records" # TODO add localization
@@ -426,7 +432,7 @@ module.exports.DUMP_USER_SORTED_ISSUES = DUMP_USER_SORTED_ISSUES = (err, issues)
 
   issues = issues.sort (a,b) -> b.priority.id - a.priority.id
   for i in issues
-    s = [i.id]
+    s = [padCenter i.id, 5]
     s.push padRight i.status.name, 10
     s.push padRight i.subject, 100
     console.log applyColor i.priority.id, s.join " | "
@@ -653,6 +659,17 @@ class RedmineAPI
   #
   #
   getTimeEntries: (opts={}, fn=DUMP_TIME_ENTRIES) ->
+    if opts.spend_on?
+      opts.spent_on = opts.spend_on
+      delete opts.spend_on
+
+    if ("today" is opts.spent_on) or opts.today?
+      opts.spent_on = (new Date).pretty_string()
+
+    if opts.week?
+      delete opts.week
+      opts.period = "week"
+
     dumpTimeEntries = (err, time_entries) ->
       if err
         fn err
@@ -661,7 +678,6 @@ class RedmineAPI
         # sort by user id
         time_entries = time_entries.sort (a,b) -> a.user.id - b.user.id
         fn null, time_entries
-
 
     if opts.period?
       period = if "week" is opts.period then 7 else parseInt opts.period

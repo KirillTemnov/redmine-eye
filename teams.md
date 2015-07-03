@@ -47,13 +47,13 @@ ry team NAME add 6,7
 ### List team members
 
 ```bash
-ry team NAME list
+ry team NAME
 ```
 
 ### Remove team member
 
 ```bash
-ry team NAME del 3,7
+ry team NAME rm 3,7
 ```
 
 After remove last team member, team will be erased.
