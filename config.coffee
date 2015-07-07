@@ -7,7 +7,9 @@
 # :api_key - key for sending requests
 # :pid - default project id
 # :
-# 
+#
+
+# coffeelint: disable=max_line_length, enable=colon_assignment_spacing
 
 nconf         = require "nconf"
 readline      = require "readline-sync"
@@ -64,5 +66,3 @@ module.exports.setup = setup = ->
   yes
 
 module.exports.config = nconf
-
-

@@ -69,7 +69,7 @@ return unless setup()
 
 #console.log "ARGV = #{JSON.stringify argv, null, 2}"
 
-{copyArgv, padRight, dup, DUMP_JSON_BODY, DUMP_JSON, DUMP_USERS, DUMP_USER_SORTED_ISSUES, RedmineAPI} = require "./redmine-api"
+{copyArgv, padRight, dup, DUMP_JSON_BODY, DUMP_JSON, DUMP_USERS, DUMP_USER_SORTED_ISSUES, DUMP_USER_SORTED_ISSUES_NC, RedmineAPI} = require "./redmine-api"
 
 #--------------------------------------------------------------------------------
 
@@ -78,11 +78,29 @@ api = new RedmineAPI config
 ARGV = copyArgv argv
 
 if "projects" is argv._[0]
+  ARGV.limit ||= 100
   if DEBUG_MODE
     api.getProjects ARGV, DUMP_JSON_BODY
   else
     api.getProjects ARGV
   return
+
+# stelth mode
+if "projects-info" is argv._[0]
+  proceed_projects = 0
+  ARGV.limit = 100
+  console.log "fetch projects"
+  api.getProjects ARGV, (err, resp, body) ->
+    unless err
+      body = JSON.parse body
+      body.projects.map (p) ->
+        opts = project_id: p.id, status_id: "open", all: yes
+        newApi = new RedmineAPI config
+        newApi.getIssues opts, (err, issues) ->
+          unless err
+            console.log "| #{padRight issues.length, 6} |  #{padRight p.name, 50}  | #{padRight p.identifier, 25} | "
+      # todo add total count
+
 
 if "log" is argv._[0]
   ARGV.status_id = "*"          # TODO watch this!
@@ -94,10 +112,19 @@ if "log" is argv._[0]
 
 # watch my tasks
 if "watch" is argv._[0]
+  fn = DUMP_USER_SORTED_ISSUES
+  if argv["nocolor"]?
+    fn = DUMP_USER_SORTED_ISSUES_NC
+  if argv["closed"]?
+    ARGV.status_id = "closed"
+  if argv["all"]?
+    ARGV.all       = yes
+
   argv._.shift()
   who               = argv._           # list of users/groups
   ARGV.status_id  ||= "open"
   ARGV.limit      ||= 100
+
 
   who               = ["me"] if 0 is who.length
   teams             = config.get("teams") or {}
@@ -109,7 +136,9 @@ if "watch" is argv._[0]
       for person_id in teams[name]
         teamUserArgs                 = copyArgv ARGV
         teamUserArgs.assigned_to_id  = person_id
-        api.getIssues teamUserArgs, DUMP_USER_SORTED_ISSUES
+        # add extra creation instance for prevent broke counters
+        api = new RedmineAPI config
+        api.getIssues teamUserArgs, fn
     else
       if name is "me"
         userArgs.assigned_to_id      = "me"
@@ -117,7 +146,9 @@ if "watch" is argv._[0]
         userArgs.assigned_to_id      = name
       else
         continue
-      api.getIssues userArgs, DUMP_USER_SORTED_ISSUES
+      # add extra creation instance for prevent broke counters
+      api = new RedmineAPI config
+      api.getIssues userArgs, fn
 
   return
 
@@ -214,7 +245,6 @@ if "team" is argv._[0]
           else
             console.error "#{resp.request.method}\t#{resp.request.uri.href}"
             console.error err
-
 
       else
         console.log dup "=", 41

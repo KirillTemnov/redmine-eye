@@ -439,6 +439,34 @@ module.exports.DUMP_USER_SORTED_ISSUES = DUMP_USER_SORTED_ISSUES = (err, issues)
   console.log ""
 
 #
+# Public: Dump user issues, sorted by priority, NO COLOR
+#
+#
+module.exports.DUMP_USER_SORTED_ISSUES_NC = DUMP_USER_SORTED_ISSUES_NC = (err, issues) ->
+  if err
+    console.error "Error: #{JSON.stringify err, null, 2}"
+    return
+
+  if 0 < issues.length
+    user = "#{issues[0].assigned_to.name.replace(/\d+/, '_')}" +
+      " ( #{issues.length} ) " +
+      " [ id:#{issues[0].assigned_to.id} ]"
+    console.log user
+    console.log dup "_", 120
+  else
+    return console.log "no records" # TODO add localization
+
+
+  issues = issues.sort (a,b) -> b.priority.id - a.priority.id
+  for i in issues
+    s = [padCenter i.id, 5]
+    s.push padRight i.status.name, 10
+    s.push padRight i.subject, 100
+    console.log s.join " | "
+  console.log ""
+
+
+#
 # Public: Dump time entries
 #
 #
@@ -513,7 +541,7 @@ class RedmineAPI
       @fetched_objects.issues ||= {}
 
       for i in current_issues
-        @fetched_objects.issues[i.id] = i
+        @fetched_objects.issues[i.id.toString()] = i
 
       # reach bottom
       if (err?.status? and 404 is err.status) or ((opts.limit or 100) > current_issues.length)

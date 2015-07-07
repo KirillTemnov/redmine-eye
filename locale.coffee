@@ -2,6 +2,8 @@
 # Locale settings
 #
 #
+#
+# coffeelint: disable=max_line_length, enable=colon_assignment_spacing
 
 messages = {}
 
