@@ -18,7 +18,8 @@ They may be changed later with `ry conf NAME VALUE` command.
 | `host`       | Redmine server url | yes      |
 | `port`       | Redmine server port | yes |
 | `api_key`    | user API key | yes |
-| `check_cert` | check https sertificate | no |
+| `check_cert` | check `https` certificate | no |
+| `admin`      | Redmine administrator. Set `yes`, if **you** have admin rights  | no |
 
 
 
@@ -40,37 +41,6 @@ After *this* you can use `redmine-eye` normally.
 
 Use command line interface for access all library tools from console.
 
-## List projects
-
-```
-ry projects
-```
-
-By default redmine returns 25 projects (not documented). For access other projects use `--limit`/`--offset` options.
-
-```
-ry projects --limit 42
-```
-
-
-## List time
-
-
-Show user and time
-
-```
-ry time [options]
-```
-
-### Options
-
-| Option          | Description                                 |
-|:---------------:|:--------------------------------------------|
-| `limit`         | limit of records                            |
-| `offset`        | offset, **may be buggy with period**        |
-| `period`        | set to `week` for week report               |
-| `spent_on`      | results on date (date format: "YYYY-MM-DD"  |
-| `user_id`       | fetch results only by user                  |
 
 
 # Library usage examples
@@ -78,13 +48,15 @@ ry time [options]
 Before start use library you should initialize it with code:
 
 ```coffee
-Rapi = require "./redmine-api"
+nconf = require "nconf" # add libraty to pass config
+
+rmAPI = require("redmine-eye").RedmineAPI
 nconf.use "memory"
 nconf.set "host", "https://redmine.example.com"
 nconf.set "port", "80"
 nconf.set "api_key", "my-redmine-api-key-here"
 
-api = new Rapi nconf
+api = new rmAPI nconf
 
 ```
 

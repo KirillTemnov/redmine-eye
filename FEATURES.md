@@ -7,7 +7,13 @@
 - [X] statistics sorting
 - [ ] process server errors
 - [ ] add work time to stat
-- [X] сделать доступной команду ry (вместо index.coffee)
+- [X] period for time tracking (days)
+- [X] make accessible `ry` command (instead of `index.coffee`)
+- [ ] symbols for trackers
+- [ ] symbols for issue states
+- [ ] alias for commands (like saved searches)
+- [ ] localize usage in `cli`
+
 
 ### User features
 
@@ -15,5 +21,4 @@
 - [ ] create several issues from console
 - [ ] get all my tasks
 - [ ] show troubles (unclosed tasks, zero time tasks, to many taken tasks etc.)
-
-
+- [ ] colorize task priorities

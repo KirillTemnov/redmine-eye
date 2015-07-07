@@ -14,30 +14,34 @@ if /ru_RU/.test process.env.LANG
 else
   loc    = locale.en
 
+
 #
-# Internal: duplicate symbol
+# Public: duplicate symbol
 #
 # :sym - symbol to duplicate
 # :times - times to duplicate
 # :return duplicated string
 #
-dup = (sym="#", times=10) ->
+module.exports.dup = dup = (sym="#", times=10) ->
   if times > 0
     ([1..times].map -> sym).join ""
   else
     ""
 
 #
-# Public: Extends (oh my god!) Date object
+# Internal: Extends (oh my god!) Date object
 #
 #
-Date::pretty_string = ->
-  zero_pad = (x) -> if x < 10 then '0'+x else ''+x
+Date::pretty_string = (fmt="yyyy-mm-dd") ->
+  zero_pad = (x) -> if x < 10 then "0#{x}" else "#{x}"
   d = zero_pad(@getDate())
   m = zero_pad(@getMonth() + 1)
   y = @getFullYear()
-  "#{y}-#{m}-#{d}"
-
+  switch fmt
+    when "yyyy-mm-dd"
+      "#{y}-#{m}-#{d}"
+    else
+      "date format undefined"
 
 #
 # Internal: normalize value and max value to chars
@@ -48,15 +52,34 @@ normalize = (val, maxVal, maxChars) ->
   Math.round persent * maxChars
 
 #
-# Internal: Insert symbols from right of specified string
+# Public: Insert symbols from right of specified string
 #
 #
-padRight = (str, length, symbol=" ") ->
+module.exports.padRight = padRight = (str, length, symbol=" ") ->
+  str = str.toString()
   restLen = length - str.length
   if restLen < 0
     str[0...length-2] + ".."
   else
     str + dup symbol, restLen
+
+#
+# Internal: Insert symbols from left and right of specified string
+#
+#
+padCenter = (str, length, symbol=" ") ->
+  str = str.toString()
+  restLen = length - str.length
+  if restLen < 0
+    str[0...length-2] + ".."
+  else
+    if 0 is restLen % 2
+      l1 = l2 = restLen / 2
+    else
+      l1 = l2 = parseInt restLen / 2
+      l2++
+    "#{dup symbol, l1}#{str}#{dup symbol, l2}"
+
 
 
 #
@@ -121,7 +144,7 @@ module.exports.PRINT_PROJECT_STATS = PRINT_PROJECT_STATS = (err, fetched_objects
 # Public: Print users stats by project to console
 #
 #
-module.exports.PRINT_USERS_STAT = PRINT_USERS_STAT = (err, fetched_objects, opts={}, loc) ->
+module.exports.PRINT_USERS_STAT = PRINT_USERS_STAT = (err, fetched_objects, opts={}) ->
   if err
     return console.error loc.error_fetching_issues.red
 
@@ -272,6 +295,23 @@ module.exports.GET = GET = (url, config, opts, fn) ->
 
     fn err or status: resp.statusCode, resp, body
 
+#
+# Public: Dump statuses
+#
+#
+module.exports.DUMP_STATUSES = DUMP_STATUSES = (err, resp, body) ->
+  if null is err
+    body = JSON.parse body
+    console.log "|  ID  | #{padRight loc.statuses_name, 30} | #{padRight loc.statuses_is_default, 12}  |  #{padRight loc.statuses_is_closed, 10} |"
+    console.log dup "=", 71
+    for s in body.issue_statuses
+      str = ["| #{padCenter s.id, 4} | #{padRight s.name, 30} | "]
+      str.push " #{padCenter (if s.is_default then 'V' else ' '), 12} | "
+      str.push " #{padCenter (if s.is_closed then 'V' else ' '), 10} |"
+      console.log str.join ""
+    console.log dup "=", 71
+  else
+    console.error err
 
 #
 # Public: Dump body of request
@@ -296,8 +336,10 @@ module.exports.DUMP_USERS = DUMP_USERS = (err, resp, body) ->
 
   if err is null
     body = JSON.parse body
+    console.log dup "=", 41
     for u in body.users
       console.log "| #{padRight u.id.toString(), 4} | #{padRight u.firstname + ' ' + u.lastname, 30} |"
+    console.log dup "=", 41
   else
     console.error "#{resp.request.method}\t#{resp.request.uri.href}"
     console.error err
@@ -315,11 +357,13 @@ module.exports.DUMP_PROJECTS = DUMP_PROJECTS = (err, resp, body) ->
     console.error err
   else
     prj =  JSON.parse body
-    for p in prj.projects
+    for p in prj.projects       # TODO make nicer
       console.log "#{p.id}\t\t#{p.name}"
 
 
-
+#
+# Public: Dump json data co console
+#
 module.exports.DUMP_JSON = DUMP_JSON = (err, jsonData) ->
   return if err
   console.log "#{JSON.stringify jsonData, null, 2}"
@@ -331,10 +375,95 @@ module.exports.DUMP_JSON = DUMP_JSON = (err, jsonData) ->
 module.exports.DUMP_ISSUES = DUMP_ISSUES = (err, issues) ->
   return if err
 
+  #
+  # Make short representation of author string
+  #
+  #
+  formatAuthor = (author) ->
+    str = author.split " "
+    if 2 <= str.length
+      str[0][0..3] + " " + str[1][0] + "."
+    else
+      padRight str[0][0..5], 7
+
+  console.log dup "=", 140
   for i in issues
-    # TODO formatting (!)
-    console.log "##{i.id}\t#{i.tracker.name}\t#{i.status.name}\t|#{i.author.name} ->" +
-      " #{i.assigned_to? and i.assigned_to.name or 'nil'}| #{i.subject}"
+    s = ["| #{padCenter i.id, 6}/#{i.status.id} |"]
+    s.push " #{i.tracker.name[0]}"
+    s.push " #{i.status.name[0]} |"
+    who = "#{formatAuthor i.author.name} ⇒ #{i.assigned_to? and formatAuthor(i.assigned_to.name) or 'nil'}"
+    s.push " #{padRight who, 18} |"
+    s.push " #{padRight i.subject, 100} |"
+    console.log s.join ""
+  console.log dup "=", 140
+  console.log ""
+
+
+#
+# Public: Dump user issues, sorted by priority
+#
+#
+module.exports.DUMP_USER_SORTED_ISSUES = DUMP_USER_SORTED_ISSUES = (err, issues) ->
+  if err
+    console.error "Error: #{JSON.stringify err, null, 2}"
+    return
+
+  if 0 < issues.length
+    user = "#{issues[0].assigned_to.name}".bold +
+      " (#{issues.length}) ".bold +
+      " [ id:#{issues[0].assigned_to.id} ]".grey
+    console.log user
+    console.log dup "_", 120
+  else
+    return console.log "no records" # TODO add localization
+
+  applyColor = (p, str) ->
+    switch p
+      when 1
+        str.blue
+      when 2
+        str.green
+      when 3
+        str.yellow
+      when 4
+        str.red
+      when 5
+        str.white.bgRed.bold
+
+  issues = issues.sort (a,b) -> b.priority.id - a.priority.id
+  for i in issues
+    s = [padCenter i.id, 5]
+    s.push padRight i.status.name, 10
+    s.push padRight i.subject, 100
+    console.log applyColor i.priority.id, s.join " | "
+  console.log ""
+
+#
+# Public: Dump user issues, sorted by priority, NO COLOR
+#
+#
+module.exports.DUMP_USER_SORTED_ISSUES_NC = DUMP_USER_SORTED_ISSUES_NC = (err, issues) ->
+  if err
+    console.error "Error: #{JSON.stringify err, null, 2}"
+    return
+
+  if 0 < issues.length
+    user = "#{issues[0].assigned_to.name.replace(/\d+/, '_')}" +
+      " ( #{issues.length} ) " +
+      " [ id:#{issues[0].assigned_to.id} ]"
+    console.log user
+    console.log dup "_", 120
+  else
+    return console.log "no records" # TODO add localization
+
+
+  issues = issues.sort (a,b) -> b.priority.id - a.priority.id
+  for i in issues
+    s = [padCenter i.id, 5]
+    s.push padRight i.status.name, 10
+    s.push padRight i.subject, 100
+    console.log s.join " | "
+  console.log ""
 
 
 #
@@ -346,17 +475,33 @@ module.exports.DUMP_TIME_ENTRIES = DUMP_TIME_ENTRIES = (err, time_entries) ->
     console.error "#{resp.request.method}\t#{resp.request.uri.href}"
     console.error err
   else
+    global_total = 0
     total = 0
     console.log dup "-", 112
-    console.log "| #{padRight loc.time, 8} | #{padRight loc.user, 30} | #{padRight loc.date, 10} | #{padRight loc.issue, 8} | #{padRight loc.project, 40} |"
+    last_usr = ""
+    console.log "| #{padCenter loc.time, 8} | #{padRight loc.user, 30} | #{padRight loc.date, 10} | #{padRight loc.issue, 8} | #{padRight loc.project, 40} |"
     console.log dup "-", 112
     for t in time_entries
       usr = "#{t.user.name} [#{t.user.id}]"
+      unless usr is last_usr
+        last_usr = usr
+        if 0 < total
+          console.log dup "-", 112
+          console.log "| #{padRight total.toFixed(2), 8} | #{padRight loc.total_hours, 97} |"
+          console.log dup "-", 112
+        global_total += total
+        total = 0
+
       console.log "| #{padRight t.hours.toFixed(2), 8} | #{padRight usr, 30} | #{t.spent_on} | #{padRight t.issue.id.toString(), 8} | #{padRight t.project.name, 40} |"
       total += t.hours
-    console.log dup "-", 112
-    console.log "#{loc.total_hours}#{total.toFixed 2}"
 
+    global_total += total
+    console.log dup "-", 112
+    console.log "| #{padRight total.toFixed(2), 8} | #{padRight loc.total_hours, 97} |"
+    console.log dup "-", 112
+    console.log ""
+    console.log "#{loc.total_hours.bold} : #{global_total.toFixed 2}"
+    console.log ""
 
 
 #
@@ -396,7 +541,7 @@ class RedmineAPI
       @fetched_objects.issues ||= {}
 
       for i in current_issues
-        @fetched_objects.issues[i.id] = i
+        @fetched_objects.issues[i.id.toString()] = i
 
       # reach bottom
       if (err?.status? and 404 is err.status) or ((opts.limit or 100) > current_issues.length)
@@ -542,15 +687,28 @@ class RedmineAPI
   #
   #
   getTimeEntries: (opts={}, fn=DUMP_TIME_ENTRIES) ->
+    if opts.spend_on?
+      opts.spent_on = opts.spend_on
+      delete opts.spend_on
+
+    if ("today" is opts.spent_on) or opts.today?
+      opts.spent_on = (new Date).pretty_string()
+
+    if opts.week?
+      delete opts.week
+      opts.period = "week"
+
     dumpTimeEntries = (err, time_entries) ->
       if err
         fn err
       else
         time_entries = JSON.parse(time_entries).time_entries if "string" is typeof time_entries
+        # sort by user id
+        time_entries = time_entries.sort (a,b) -> a.user.id - b.user.id
         fn null, time_entries
 
-
-    if opts.period is "week"    # get last week
+    if opts.period?
+      period = if "week" is opts.period then 7 else parseInt opts.period
       delete opts.period
       # set limit to 100 records and
       opts.limit = 100
@@ -558,7 +716,7 @@ class RedmineAPI
 
       delete opts.spent_on      # TODO this make works buggy on later dates
       days = []
-      [0...7].map ->
+      [0...period].map ->
         days.push day.pretty_string()
         day.setDate day.getDate() - 1
 
@@ -579,7 +737,7 @@ class RedmineAPI
   # Public: Get issues statuses
   #
   #
-  getIssueStatuses: (opts={}, fn=DUMP_JSON_BODY) ->
+  getIssueStatuses: (opts={}, fn=DUMP_STATUSES) ->
     #pid = opts.pid || config.pid
     GET "/issue_statuses.json", @config, opts, fn
 
@@ -595,11 +753,10 @@ class RedmineAPI
   #
   # Public: Return true if issue is closed
   #
-  # TODO read id status from config.
-  # for now just hardcode it to 5
   #
   issueClosed: (issue) ->
-    5 is issue.status.id
+    closeStatuses = (@config.get("closeStatuses") or "").toString().split(",").map (x) -> parseInt x
+    issue.status.id in closeStatuses
 
 
   #
@@ -608,7 +765,8 @@ class RedmineAPI
   # TODO read id status from config.
   #
   issueDone: (issue) ->
-    (100 is issue.done_ratio) or issue.status.id in [3, 5, 6]
+    doneStatuses = (@config.get("doneStatuses") or  "").toString().split(",").map (x) -> parseInt x
+    (100 is issue.done_ratio) or issue.status.id in doneStatuses
 
   #
   # Public: Issue in process
@@ -616,7 +774,8 @@ class RedmineAPI
   # TODO read id status from config.
   #
   issueInProcess: (issue) ->
-    2 is issue.status.id
+    processStatuses = (@config.get("processStatuses") or "").toString().split(",").map (x) -> parseInt x
+    issue.status.id in processStatuses
 
   #
   # Public: Get issues statistics by projects
