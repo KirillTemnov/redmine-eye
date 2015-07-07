@@ -10,6 +10,7 @@
  - update readme, add more samples
  - fix localization issues
  - add star command for watching issues (text search inside starred issues, obsolescence, etc.)
+ - take issue in work, set aside, close, add time from console
 
 # v0.8.0
 
