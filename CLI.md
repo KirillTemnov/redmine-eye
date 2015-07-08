@@ -106,4 +106,19 @@ ry issue --pid 111 -t ошибка -p 2 --to Петров --vID 123 Встави
 ### fields
 
 
-## teams TODO
+## [teams](teams.md)
+
+
+# Useful commands
+
+## Show open issues of users in group
+
+```bash
+ry watch GROUP | grep id:
+```
+
+## Show total open issues in group
+
+```bash
+ry watch GROUP --nocolor | grep id: |  awk '{s+=$4} END {print s}'
+```
