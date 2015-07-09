@@ -18,6 +18,7 @@ COMMANDS:
   time          - work time
   issue         - create an issue
   issues        - batch create several issues
+  i             - info on issue
   ms            - list of milestones
   conf          - configuration
   project-stat  - statistics on project tasks
@@ -28,7 +29,7 @@ COMMANDS:
   team, teams   - manage teams
   watch         - filter tasks
   users         - list of redmine users (fetch all users only by admin)
-
+  star, unstar  - star or unstar issue
 """
 argv = require("optimist").usage(usage).argv
 
@@ -39,6 +40,7 @@ if 0 is argv._.length
     pkg = require "./package.json"
     console.log pkg.name
     console.log "version: #{pkg.version}"
+    console.log "created with ☕ script"
     return
   else
     return console.log usage
@@ -57,7 +59,7 @@ if "conf" in argv._
       config.clear argv._[2]
     else
       config.set argv._[1], argv._[2]
-    config.save (err) ->
+    config.save (err) ->        # todo move config saving in separate function
       if err
         console.error "error saving config"
       else
@@ -69,13 +71,36 @@ return unless setup()
 
 #console.log "ARGV = #{JSON.stringify argv, null, 2}"
 
-{copyArgv, padRight, dup, DUMP_JSON_BODY, DUMP_JSON, DUMP_USERS, DUMP_USER_SORTED_ISSUES, DUMP_USER_SORTED_ISSUES_NC, RedmineAPI} = require "./redmine-api"
+{copyArgv, padRight, dup, DUMP_JSON_BODY, DUMP_JSON, DUMP_USERS, DUMP_USER_SORTED_ISSUES, DUMP_USER_SORTED_ISSUES_NC, DUMP_ISSUE, RedmineAPI} = require "./redmine-api"
 
 #--------------------------------------------------------------------------------
 
 api = new RedmineAPI config
 
 ARGV = copyArgv argv
+
+
+if argv._[0] in ["star", "unstar"]
+  cmd = argv._.shift()
+  if "star" is cmd
+    stars = config.get("stars") or {}
+    subcmd = argv._[0]
+    if "show" is subcmd
+      console.log "todo show"
+    else
+      now = (new Date).getTime()
+      for issue in argv._
+        if /^\d+$/.test issue
+          stars[issue] = now
+      config.set "stars", stars
+      config.save (err) ->
+        if err
+          console.error "error saving config"
+
+
+  else
+    console.log "implement unstar"
+  return
 
 if "projects" is argv._[0]
   ARGV.limit ||= 100
@@ -191,9 +216,22 @@ if "user" is argv._[0]
   api.getUserStat ARGV
   return
 
-if argv._[0] in ["issue", "i"]
+if "issue" is argv._[0]
   api.createIssue ARGV, argv._[1..].join " "
   return
+
+if "i" is argv._[0]
+  if 1 is argv._.length
+    console.error "empty ussues list" # todo localization
+    return
+
+
+  for i in argv._[1..]
+    if DEBUG_MODE
+      api.getIssueInfo i, {}, DUMP_JSON_BODY
+    else
+      api.getIssueInfo i, {}, DUMP_ISSUE
+  #api.getIssueInfo
 
 if "statuses" is argv._[0]
   if DEBUG_MODE

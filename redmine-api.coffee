@@ -313,6 +313,62 @@ module.exports.DUMP_STATUSES = DUMP_STATUSES = (err, resp, body) ->
   else
     console.error err
 
+
+#
+# Public: Dump issue
+#
+#
+module.exports.DUMP_ISSUE = DUMP_ISSUE = (err, resp, body) ->
+
+  formatUser = (u) ->
+    if u? and u.name and u.id
+      "#{u.name}".bold + " [ id:#{u.id} ]".grey
+    else
+      "Anonimous"
+
+
+  if err is null
+    body = JSON.parse body
+    i  = body.issue
+    # print issue, tracker, author ...
+    #
+    console.log "##{padRight(i.id, 6).bold} #{('( ' + i.status.name + ' )').grey #{padRight(i.tracker.name, 20)} }\n"
+
+    console.log "☉ #{formatUser i.author}  ☞  #{formatUser i.assigned_to}\n"
+    if 0 < i.watchers.length
+      for w in i.watchers
+        console.log "   ★  ".yellow + formatUser w
+      console.log ""
+    console.log "#{padRight(i.subject, 120).bold}\n"
+    if 0 < i.description
+      console.log dup "-", 120
+      console.log "#{i.description}"
+    if i.children
+      console.log dup "=", 120
+      console.log "Подзадачи:\n"
+      for ch, index in i.children
+        if index is i.children.length - 1
+          out = ["  └──"]
+        else
+          out = ["  ├──"]
+        out.push " ##{padRight ch.id, 6} "
+        out.push " > #{padRight ch.subject, 100}"
+        console.log out.join ""
+      console.log ""
+    console.log dup "-", 120
+    console.log ""
+    # journals
+    for j in i.journals
+      if j.notes? and 0 < j.notes.length
+        console.log formatUser j.user
+        console.log j.notes
+        console.log dup ".", 50
+        console.log ""
+    console.log ""
+  else
+    console.error "#{resp.request.method}\t#{resp.request.uri.href}"
+    console.error err
+
 #
 # Public: Dump body of request
 #
@@ -732,6 +788,14 @@ class RedmineAPI
     else
       GET "time_entries.json", @config, opts, (err, resp, body) ->
         dumpTimeEntries err, body
+
+  #
+  # Public: Get issue info
+  #
+  #
+  getIssueInfo: (id, opts={}, fn=DUMP_JSON_BODY) ->
+    opts.include = "children,attachments,relations,changesets,journals,watchers"
+    GET "issues/#{id}.json", @config, opts, fn
 
   #
   # Public: Get issues statuses
