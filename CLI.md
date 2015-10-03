@@ -6,6 +6,41 @@ ry command opts
 
 Commands shown below
 
+## Staring issues
+
+To watch issues you may want to star it (or unstar)
+
+### Add to starred issues
+
+You can add many starred issues at once, separated by whitespace.
+
+```
+ry star 0000 0001 0003
+```
+
+### Show starred issues
+
+Show list of all starred issues
+
+```
+ry star show
+```
+
+Show only new issues
+
+```
+ry star show new
+```
+
+
+### remove from starred issues
+
+```
+ry unstar 0001 0004
+```
+
+
+
 ## List projects (`projects`)
 
 ```
@@ -95,7 +130,7 @@ Sort resulst by
 | `done`    | sort by done tasks        | |
 
 
-## Create issue (`i`, `issue`)
+## Create issue ( `issue`)
 
 create new task
 
