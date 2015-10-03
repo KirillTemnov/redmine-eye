@@ -29,6 +29,7 @@ COMMANDS:
   team, teams   - manage teams
   watch         - filter tasks
   users         - list of redmine users (fetch all users only by admin)
+  groups        - list of redmine groups
   star, unstar  - star or unstar issue
 """
 argv = require("optimist").usage(usage).argv
@@ -200,6 +201,10 @@ if "users" is argv._[0]
       console.error "You are not admin. Set `admin` option in config, or set `--pid` option".red # TODO add localization
     else
       api.getProjectUsers ARGV  # TODO change dump function
+  return
+
+if "groups" is argv._[0]
+  api.getGroups ARGV
   return
 
 if "project-stat" is argv._[0]
