@@ -65,7 +65,6 @@ If uid and team missed, select time for `"me"`
 | `offset`        | offset, **may be buggy with period**        |
 | `period`        | set to `week` for week report, or int (for number of days) |
 | `spent_on`      | results on date (date format: "YYYY-MM-DD"  |
-| `user_id`       | fetch results only by user                  |
 
 
 
