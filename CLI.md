@@ -48,8 +48,14 @@ If no options provided, last issues will shown.
 Show user and issue(s), project(s) and spended time
 
 ```
-ry time [options]
+ry time [team/uid] [options]
 ```
+
+### Team/uid
+
+If team name is selected - show **first team member** time.
+
+If uid and team missed, select time for `"me"`
 
 ### Options
 

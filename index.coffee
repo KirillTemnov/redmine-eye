@@ -186,6 +186,20 @@ if argv._[0] in ["ms", "versions"]
   return
 
 if "time" is argv._[0]
+  # search teams
+  argv._.shift()
+  who = argv._
+  who               = ["me"] if 0 is who.length
+  teams             = config.get("teams") or {}
+
+  name = who.pop()
+  if "me" is name
+    ARGV.user_id = "me"
+  else if teams[name]?
+    ARGV.user_id = teams[name].join ","
+  else if /^\d+$/.test name
+    ARGV.user_id = name
+
   if DEBUG_MODE
     api.getTimeEntries ARGV, DUMP_JSON
   else
