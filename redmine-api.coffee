@@ -721,6 +721,14 @@ class RedmineAPI
   getUsers: (opts={}, fn=DUMP_USERS) ->
     GET "users.json", @config, opts, fn
 
+
+  #
+  #
+  # Public: Get groups
+  #
+  getGroups: (opts={}, fn=DUMP_JSON) ->
+    GET "groups.json", @config, opts, fn
+
   #
   # Public: Get current user data
   #
