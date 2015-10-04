@@ -243,17 +243,6 @@ module.exports.POST = POST = (url, config, data, fn) ->
 
   url = "#{config.get('host')}:#{config.get('port')}/#{url}"
 
-  # if 0 < r.length
-  #   if -1 is url.indexOf "?"
-  #     url += "?"
-  #   else if "&" isnt url[-1..]
-  #     url += "&"
-
-  #   url += r.join "&"
-
-  console.log "posting: " + JSON.stringify {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, null, 2
-  #return
-
   request.post {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, (err, resp, body) ->
     if err
       return fn err, resp, body
@@ -311,6 +300,62 @@ module.exports.DUMP_STATUSES = DUMP_STATUSES = (err, resp, body) ->
       console.log str.join ""
     console.log dup "=", 71
   else
+    console.error err
+
+
+#
+# Public: Dump issue
+#
+#
+module.exports.DUMP_ISSUE = DUMP_ISSUE = (err, resp, body) ->
+
+  formatUser = (u) ->
+    if u? and u.name and u.id
+      "#{u.name}".bold + " [ id:#{u.id} ]".grey
+    else
+      "Anonimous"
+
+
+  if err is null
+    body = JSON.parse body
+    i  = body.issue
+    # print issue, tracker, author ...
+    #
+    console.log "##{padRight(i.id, 6).bold} #{('( ' + i.status.name + ' )').grey #{padRight(i.tracker.name, 20)} }\n"
+
+    console.log "☉ #{formatUser i.author}  ☞  #{formatUser i.assigned_to}\n"
+    if 0 < i.watchers.length
+      for w in i.watchers
+        console.log "   ★  ".yellow + formatUser w
+      console.log ""
+    console.log "#{padRight(i.subject, 120).bold}\n"
+    if 0 < i.description
+      console.log dup "-", 120
+      console.log "#{i.description}"
+    if i.children
+      console.log dup "=", 120
+      console.log "Подзадачи:\n"
+      for ch, index in i.children
+        if index is i.children.length - 1
+          out = ["  └──"]
+        else
+          out = ["  ├──"]
+        out.push " ##{padRight ch.id, 6} "
+        out.push " > #{padRight ch.subject, 100}"
+        console.log out.join ""
+      console.log ""
+    console.log dup "-", 120
+    console.log ""
+    # journals
+    for j in i.journals
+      if j.notes? and 0 < j.notes.length
+        console.log formatUser j.user
+        console.log j.notes
+        console.log dup ".", 50
+        console.log ""
+    console.log ""
+  else
+    console.error "#{resp.request.method}\t#{resp.request.uri.href}"
     console.error err
 
 #
@@ -408,14 +453,24 @@ module.exports.DUMP_USER_SORTED_ISSUES = DUMP_USER_SORTED_ISSUES = (err, issues)
     console.error "Error: #{JSON.stringify err, null, 2}"
     return
 
+  issues = issues.sort (a,b) -> b.priority.id - a.priority.id
+  # calculate estimated hours
+  undone_hours = 0
+  issues.map (i) ->
+    eh = i.estimated_hours || 0
+    dr = i.done_ratio || 0
+    undone_hours += eh * ((100 - dr) / 100)
+
+
   if 0 < issues.length
     user = "#{issues[0].assigned_to.name}".bold +
       " (#{issues.length}) ".bold +
-      " [ id:#{issues[0].assigned_to.id} ]".grey
+      " [ id:#{issues[0].assigned_to.id} ]".grey +
+      " [ #{loc.hours} : #{(undone_hours).toFixed 0} ]"
     console.log user
     console.log dup "_", 120
   else
-    return console.log "no records" # TODO add localization
+    return console.log "#{loc.no_records}"
 
   applyColor = (p, str) ->
     switch p
@@ -430,9 +485,10 @@ module.exports.DUMP_USER_SORTED_ISSUES = DUMP_USER_SORTED_ISSUES = (err, issues)
       when 5
         str.white.bgRed.bold
 
-  issues = issues.sort (a,b) -> b.priority.id - a.priority.id
-  for i in issues
-    s = [padCenter i.id, 5]
+
+  issues.map (i) ->
+    s = [padCenter  (if i.estimated_hours? then i.estimated_hours else "*"), 5]
+    s.push padCenter i.id, 5
     s.push padRight i.status.name, 10
     s.push padRight i.subject, 100
     console.log applyColor i.priority.id, s.join " | "
@@ -447,6 +503,13 @@ module.exports.DUMP_USER_SORTED_ISSUES_NC = DUMP_USER_SORTED_ISSUES_NC = (err, i
     console.error "Error: #{JSON.stringify err, null, 2}"
     return
 
+  undone_hours = 0
+  issues.map (i) ->
+    eh = i.estimated_hours || 0
+    dr = i.done_ratio || 0
+    undone_hours += eh * ((100 - dr) / 100)
+
+
   if 0 < issues.length
     user = "#{issues[0].assigned_to.name.replace(/\d+/, '_')}" +
       " ( #{issues.length} ) " +
@@ -454,12 +517,14 @@ module.exports.DUMP_USER_SORTED_ISSUES_NC = DUMP_USER_SORTED_ISSUES_NC = (err, i
     console.log user
     console.log dup "_", 120
   else
-    return console.log "no records" # TODO add localization
+    return console.log "#{loc.no_records}"
+
 
 
   issues = issues.sort (a,b) -> b.priority.id - a.priority.id
-  for i in issues
-    s = [padCenter i.id, 5]
+  issues.map (i) ->
+    s = [padCenter  (if i.estimated_hours? then i.estimated_hours else "*"), 5]
+    s.push padCenter i.id, 5
     s.push padRight i.status.name, 10
     s.push padRight i.subject, 100
     console.log s.join " | "
@@ -639,6 +704,23 @@ class RedmineAPI
 
 
   #
+  # Add new watcher to tasks
+  #
+  #
+  addWatcher: (opts={}, fn=->) ->
+    users = opts.users || []
+    issues = opts.issues || []
+    issues.map (i) =>
+      users.map (uid) =>
+        POST "issues/#{i}/watchers.json", @config, user_id: uid, (err, resp, body) ->
+          if err
+            console.error "#{loc.error}: #{JSON.stringify err, null, 2}"
+            fn err
+          else
+            fn null
+
+
+  #
   # Public: Get project users by collecting all issues and fetch users
   #
   getProjectUsers: (opts={}, fn=DUMP_JSON) ->
@@ -664,6 +746,14 @@ class RedmineAPI
   #
   getUsers: (opts={}, fn=DUMP_USERS) ->
     GET "users.json", @config, opts, fn
+
+
+  #
+  #
+  # Public: Get groups
+  #
+  getGroups: (opts={}, fn=DUMP_JSON) ->
+    GET "groups.json", @config, opts, fn
 
   #
   # Public: Get current user data
@@ -732,6 +822,14 @@ class RedmineAPI
     else
       GET "time_entries.json", @config, opts, (err, resp, body) ->
         dumpTimeEntries err, body
+
+  #
+  # Public: Get issue info
+  #
+  #
+  getIssueInfo: (id, opts={}, fn=DUMP_JSON_BODY) ->
+    opts.include = "children,attachments,relations,changesets,journals,watchers"
+    GET "issues/#{id}.json", @config, opts, fn
 
   #
   # Public: Get issues statuses

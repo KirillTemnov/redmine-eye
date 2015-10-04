@@ -1,16 +1,19 @@
 # v1.0.0 (pending)
 
  - move formatting functions to separate modules
- - add mock data for testing
- - add tests
- - fast issues update (close, comment, feedback, change priority)
- - add `info` command (issue full info)
- - update `time` command (for work like `watch`)
+ - fast issues update (close, comment, feedback, change priority) - DSL ?
+ - take issue in work, set aside, close, add time from console
  - add `alias` command
  - update readme, add more samples
  - fix localization issues
  - add star command for watching issues (text search inside starred issues, obsolescence, etc.)
- - take issue in work, set aside, close, add time from console
+
+
+# v0.9.0
+
+ - add watcher to task
+ - add `info` command (issue full info)
+ - update `time` command (for work like `watch`)
 
 # v0.8.0
 
