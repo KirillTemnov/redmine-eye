@@ -19,6 +19,7 @@
 
 - [X] create issues form from console
 - [ ] create several issues from console
-- [ ] get all my tasks
+- [X] get all my tasks
 - [ ] show troubles (unclosed tasks, zero time tasks, to many taken tasks etc.)
-- [ ] colorize task priorities
+- [X] colorize task priorities
+- [ ] add user to watcher

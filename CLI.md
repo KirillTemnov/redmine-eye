@@ -48,8 +48,14 @@ If no options provided, last issues will shown.
 Show user and issue(s), project(s) and spended time
 
 ```
-ry time [options]
+ry time [team/uid] [options]
 ```
+
+### Team/uid
+
+If team name is selected - show **first team member** time.
+
+If uid and team missed, select time for `"me"`
 
 ### Options
 
@@ -59,7 +65,6 @@ ry time [options]
 | `offset`        | offset, **may be buggy with period**        |
 | `period`        | set to `week` for week report, or int (for number of days) |
 | `spent_on`      | results on date (date format: "YYYY-MM-DD"  |
-| `user_id`       | fetch results only by user                  |
 
 
 

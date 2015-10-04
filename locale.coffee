@@ -44,6 +44,9 @@ messages.ru =
   statuses_is_default : "по умолчанию"
   statuses_is_closed  : "закрывает"
 
+  # extra
+  hours               : "часы"
+  no_records          : "нет записей"
 
 messages.en =
   user                    : "user"
@@ -82,5 +85,8 @@ messages.en =
   statuses_is_default : "default"
   statuses_is_closed  : "closed"
 
+  # extra
+  hours               : "hours"
+  no_records          : "no records"
 
 exports.m = messages
