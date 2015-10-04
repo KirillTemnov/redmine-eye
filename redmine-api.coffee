@@ -481,7 +481,7 @@ module.exports.DUMP_USER_SORTED_ISSUES = DUMP_USER_SORTED_ISSUES = (err, issues)
     console.log user
     console.log dup "_", 120
   else
-    return console.log "no records" # TODO add localization
+    return console.log "#{loc.no_records}"
 
   applyColor = (p, str) ->
     switch p
@@ -514,6 +514,13 @@ module.exports.DUMP_USER_SORTED_ISSUES_NC = DUMP_USER_SORTED_ISSUES_NC = (err, i
     console.error "Error: #{JSON.stringify err, null, 2}"
     return
 
+  undone_hours = 0
+  issues.map (i) ->
+    eh = i.estimated_hours || 0
+    dr = i.done_ratio || 0
+    undone_hours += eh * ((100 - dr) / 100)
+
+
   if 0 < issues.length
     user = "#{issues[0].assigned_to.name.replace(/\d+/, '_')}" +
       " ( #{issues.length} ) " +
@@ -521,12 +528,14 @@ module.exports.DUMP_USER_SORTED_ISSUES_NC = DUMP_USER_SORTED_ISSUES_NC = (err, i
     console.log user
     console.log dup "_", 120
   else
-    return console.log "no records" # TODO add localization
+    return console.log "#{loc.no_records}"
+
 
 
   issues = issues.sort (a,b) -> b.priority.id - a.priority.id
-  for i in issues
-    s = [padCenter i.id, 5]
+  issues.map (i) ->
+    s = [padCenter  (if i.estimated_hours? then i.estimated_hours else "*"), 5]
+    s.push padCenter i.id, 5
     s.push padRight i.status.name, 10
     s.push padRight i.subject, 100
     console.log s.join " | "
