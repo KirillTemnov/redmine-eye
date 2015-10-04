@@ -243,17 +243,6 @@ module.exports.POST = POST = (url, config, data, fn) ->
 
   url = "#{config.get('host')}:#{config.get('port')}/#{url}"
 
-  # if 0 < r.length
-  #   if -1 is url.indexOf "?"
-  #     url += "?"
-  #   else if "&" isnt url[-1..]
-  #     url += "&"
-
-  #   url += r.join "&"
-
-  # console.log "posting: " + JSON.stringify {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, null, 2
-  #return
-
   request.post {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, (err, resp, body) ->
     if err
       return fn err, resp, body
