@@ -22,4 +22,4 @@
 - [X] get all my tasks
 - [ ] show troubles (unclosed tasks, zero time tasks, to many taken tasks etc.)
 - [X] colorize task priorities
-- [ ] add user to watcher
+- [X] add watcher to tasks
