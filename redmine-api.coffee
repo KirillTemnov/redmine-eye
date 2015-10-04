@@ -251,7 +251,7 @@ module.exports.POST = POST = (url, config, data, fn) ->
 
   #   url += r.join "&"
 
-  console.log "posting: " + JSON.stringify {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, null, 2
+  # console.log "posting: " + JSON.stringify {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, null, 2
   #return
 
   request.post {url: url, json: data, headers: "X-Redmine-API-Key": config.get "api_key"}, (err, resp, body) ->
@@ -712,6 +712,23 @@ class RedmineAPI
             console.error "#{loc.error}: #{JSON.stringify err, null, 2}"
             return
           console.log JSON.stringify resp, null, 2
+
+
+  #
+  # Add new watcher to tasks
+  #
+  #
+  addWatcher: (opts={}, fn=->) ->
+    users = opts.users || []
+    issues = opts.issues || []
+    issues.map (i) =>
+      users.map (uid) =>
+        POST "issues/#{i}/watchers.json", @config, user_id: uid, (err, resp, body) ->
+          if err
+            console.error "#{loc.error}: #{JSON.stringify err, null, 2}"
+            fn err
+          else
+            fn null
 
 
   #

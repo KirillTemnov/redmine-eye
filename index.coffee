@@ -19,6 +19,7 @@ COMMANDS:
   issue         - create an issue
   issues        - batch create several issues
   i             - info on issue
+  aw            - add watcher
   ms            - list of milestones
   conf          - configuration
   project-stat  - statistics on project tasks
@@ -75,6 +76,22 @@ return unless setup()
 {copyArgv, padRight, dup, DUMP_JSON_BODY, DUMP_JSON, DUMP_USERS, DUMP_USER_SORTED_ISSUES, DUMP_USER_SORTED_ISSUES_NC, DUMP_ISSUE, RedmineAPI} = require "./redmine-api"
 
 #--------------------------------------------------------------------------------
+
+#
+# Get user, for who we'll apply command (team or user)
+#
+getWho = (argvObj=argv) ->
+  who = argvObj._
+  who = ["me"] if 0 is who.length
+  teams = config.get("teams") or {}
+  who = who[0]
+  if teams[who]?
+    teams[who]
+  else if ("me" is who) or /^\d+$/.test who
+    [who]
+  else
+    []
+
 
 api = new RedmineAPI config
 
@@ -135,6 +152,16 @@ if "log" is argv._[0]
   else
     api.getIssues ARGV
   return
+
+if "aw" is argv._[0]
+  argv._.shift()
+  who = getWho()
+  issues = argv._[1..].filter (t) -> /^\d+$/.test t
+  api.addWatcher users: who, issues: issues
+  # console.log "who = #{JSON.stringify who, null, 2}"
+  # console.log "tasks = #{JSON.stringify issues, null, 2}"
+  return
+
 
 # watch my tasks
 if "watch" is argv._[0]

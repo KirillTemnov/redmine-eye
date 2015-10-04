@@ -67,6 +67,11 @@ If uid and team missed, select time for `"me"`
 | `spent_on`      | results on date (date format: "YYYY-MM-DD"  |
 
 
+## Add watcher to issue (`aw`)
+
+```
+ry aw [uid/team] [tasks id list]
+```
 
 ## stat
 
