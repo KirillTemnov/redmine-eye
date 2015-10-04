@@ -43,6 +43,7 @@ messages.ru =
   statuses_name       : "название"
   statuses_is_default : "по умолчанию"
   statuses_is_closed  : "закрывает"
+  hours               : "часы"
 
 
 messages.en =
@@ -81,6 +82,6 @@ messages.en =
   statuses_name       : "name"
   statuses_is_default : "default"
   statuses_is_closed  : "closed"
-
+  hours               : "hours"
 
 exports.m = messages
